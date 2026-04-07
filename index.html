@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CiteVerify — Advanced Citation System</title>
+<title>CiteVerify - Advanced Citation System</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 
@@ -46,6 +46,7 @@ select:focus,input[type=text]:focus{border-color:var(--accent2)}
 .badge-valid{background:rgba(62,217,168,0.15);color:var(--success)}
 .badge-partial{background:rgba(240,168,64,0.15);color:var(--warn)}
 .badge-invalid{background:rgba(240,96,96,0.15);color:var(--danger)}
+.badge-hallucinated{background:rgba(240,96,96,0.15);color:var(--danger)}
 .badge-style{background:rgba(124,109,250,0.15);color:var(--accent2)}
 .score-bar{height:4px;border-radius:2px;background:var(--surface3);overflow:hidden;width:80px;display:inline-block;vertical-align:middle}
 .score-fill{height:100%;border-radius:2px}
@@ -128,8 +129,9 @@ input[type=file]{display:none}
       <div class="tagline">Citation Verification · Correction · Generation · Analytics</div>
     </div>
     <div style="font-size:0.72rem;color:var(--text3);font-family:'DM Mono',monospace;text-align:right">
-      <div>Supports: APA · MLA · Chicago · IEEE · Vancouver</div>
-      <div style="margin-top:2px">Export: CSV · JSON · Clipboard</div>
+      <div>Styles: APA - MLA - Chicago - IEEE - Vancouver</div>
+      <div style="margin-top:2px">APIs: Crossref - OpenAlex - Semantic Scholar - Europe PMC - arXiv - CORE</div>
+      <div style="margin-top:2px">Export: CSV - JSON - Clipboard</div>
     </div>
   </div>
 </header>
@@ -144,13 +146,12 @@ input[type=file]{display:none}
 <div id="panel-paste" class="panel active">
   <div class="section-title">Paste Citations</div>
   <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">Paste one citation per line. Validates, scores, and reformats each one.</p>
-  <textarea id="paste-input" rows="7" placeholder="Smith, J. A., &amp; Brown, L. T. (2020). Deep learning approaches for crowd density estimation. Journal of Computer Vision Research, 45(3), 123–145."></textarea>
+  <textarea id="paste-input" rows="7" placeholder="Smith, J. A., &amp; Brown, L. T. (2020). Deep learning approaches for crowd density estimation. Journal of Computer Vision Research, 45(3), 123-145."></textarea>
   <div class="row" style="margin-top:1rem">
     <div class="field">
       <label>Citation Style</label>
       <select id="paste-style">
-        <option value="auto">Auto Detect</option>
-        <option value="APA">APA</option>
+        <option value="APA" selected>APA</option>
         <option value="MLA">MLA</option>
         <option value="Chicago">Chicago/Turabian</option>
         <option value="IEEE">IEEE</option>
@@ -168,7 +169,7 @@ input[type=file]{display:none}
 <div id="panel-pdf" class="panel">
   <div class="section-title">PDF Upload</div>
   <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">
-    Upload a PDF — the backend reads it with AI, extracts ALL references, and analyzes them.
+    Upload a PDF - the backend reads it with AI, extracts ALL references, and analyzes them.
   </p>
 
   <div class="upload-zone" id="drop-zone"
@@ -206,9 +207,9 @@ input[type=file]{display:none}
       <label>Year Range</label>
       <select id="kw-year">
         <option value="all">All Years</option>
-        <option value="2020">2020–2024</option>
-        <option value="2015">2015–2019</option>
-        <option value="2010">2010–2014</option>
+        <option value="2020">2020-2024</option>
+        <option value="2015">2015-2019</option>
+        <option value="2010">2010-2014</option>
       </select>
     </div>
     <div class="field">
@@ -230,6 +231,18 @@ input[type=file]{display:none}
 
 <script>
 /**
+ * CiteVerify - Advanced Citation System
+ * 
+ * APIs Integrated:
+ * - Crossref API: https://api.crossref.org (no auth needed)
+ * - OpenAlex API: https://api.openalex.org (no auth needed)
+ * - Semantic Scholar API: https://api.semanticscholar.org (optional)
+ * - Europe PMC API: https://www.ebi.ac.uk/europepmc/webservices (no auth)
+ * - arXiv API: https://arxiv.org/api (no auth)
+ * - CORE API: https://core.ac.uk/api (optional key)
+ * - Backend AI API: http://localhost:3000/api/analyze-pdf (requires Anthropic API key)
+ * - Health Check API: http://localhost:3000/health (backend status)
+ * 
  * IMPORTANT:
  * - Live Server serves only the frontend.
  * - PDF extraction must be done by a backend (server.js) because it needs your Anthropic API key.
@@ -241,6 +254,18 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 // FIX: Always call backend on port 3000, not Live Server origin (5500)
 const PDF_API_BASE = "http://localhost:3000";
+
+// API Endpoints
+const API_ENDPOINTS = {
+  crossref: 'https://api.crossref.org',
+  openalex: 'https://api.openalex.org',
+  semanticScholar: 'https://api.semanticscholar.org',
+  europePMC: 'https://www.ebi.ac.uk/europepmc/webservices',
+  arxiv: 'https://arxiv.org/api',
+  core: 'https://core.ac.uk/api',
+  aiBackend: PDF_API_BASE + '/api/analyze-pdf',
+  healthCheck: PDF_API_BASE + '/health'
+};
 
 function switchTab(id){
   const ids=['paste','pdf','keyword'];
@@ -264,9 +289,10 @@ function getScoreColor(s){
 }
 
 function getStatusBadge(s){
-  if(s==='Valid')   return '<span class="badge badge-valid">&#10003; Valid</span>';
-  if(s==='Partial') return '<span class="badge badge-partial">&#9888; Partial</span>';
-  return '<span class="badge badge-invalid">&#10007; Invalid</span>';
+  if(s==='Valid')   return '<span class="badge badge-valid">✓ Valid</span>';
+  if(s==='Partially Valid') return '<span class="badge badge-partial">⚠ Partially Valid</span>';
+  if(s==='Hallucinated') return '<span class="badge badge-invalid">👁 Hallucinated</span>';
+  return '<span class="badge badge-valid">✓ Valid</span>';
 }
 
 // ─── Citation Parser ─────────────────────────────────────────────────────────
@@ -285,7 +311,7 @@ function parseOneCitation(raw, styleHint){
 
   if(futureYears.length && !validYears.length){
     year = futureYears[0];
-    errors.push('Publication year '+year+' is in the future — this citation cannot be valid');
+    errors.push('Publication year '+year+' is in the future - this citation cannot be valid');
     score -= 45;
     exps.push('Future year '+year+': −45 (hard cap applied)');
   } else if(!year){
@@ -296,11 +322,12 @@ function parseOneCitation(raw, styleHint){
     exps.push('Year '+year+' valid: +0');
   }
 
+  // Enhanced regex patterns that support 3+ authors
   const apaFull = text.match(
-    /^([A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*(?:,?\s+(?:&|and)\s+[A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*)*(?:,\s+[A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*)*)\s*\((\d{4})\)\.\s*(.+?)\.\s*(.+)/s
+    /^([A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*(?:,\s+[A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*)*(?:,?\s+(?:&|and)\s+[A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*)?)\s*\((\d{4})\)\.\s*(.+?)\.\s*(.+)/s
   );
   const apaLoose = !apaFull && /\(\d{4}\)\./.test(text) && /^[A-Z]/.test(text);
-  const mlaFull = text.match(/^([A-Z][a-z]+,\s+[A-Za-z\s]+?)\.\s+"(.+?)"\s+(.+?),\s+(\d{4})/);
+  const mlaFull = text.match(/^([A-Z][a-z]+,\s+[A-Za-z\s]+?(?:,\s+[A-Z][a-z]+)?)\.\s+"(.+?)"\s+(.+?),\s+(\d{4})/);
   const ieeeFull = text.match(/^\[?\d*\]?\s*([A-Z]\.\s*[A-Z][a-z]+(?:(?:\s+and\s+|,\s+)[A-Z]\.\s*[A-Z][a-z]+)*),\s+"(.+?)"/);
   const vanFull = text.match(/^(\d+)\.\s+([A-Z][a-z]+\s+[A-Z]+(?:,\s+[A-Z][a-z]+\s+[A-Z]+)*)\.\s+(.+?)\.\s+(.+?)\.\s*\d{4}/);
 
@@ -310,17 +337,27 @@ function parseOneCitation(raw, styleHint){
     detectedStyle='APA';
     if(apaFull){
       authors=apaFull[1]; year=apaFull[2]; title=apaFull[3].trim();
-      journal=apaFull[4].replace(/,\s*\d+[\(\d\),\s\u2013\-–\.]+$/, '').split(',')[0].trim();
+      // Better journal extraction - handles titles in quotes/italics
+      const journalPart = apaFull[4].replace(/,\s*\d+[\(\d\),\s\u2013\-–\.]+$/, '').split(',')[0].trim();
+      journal = journalPart.replace(/^[<em>]*|[<\/em>]*$/g, '').trim();
       exps.push('APA full match: structure +30');
-      const properFormat = /[A-Z][a-z]+,\s+[A-Z]\./.test(authors);
-      if(!properFormat){
+      
+      // Enhanced multi-author detection
+      const authorCount = (authors.match(/&|and/gi) || []).length + 1;
+      const authorFormatMatch = /[A-Z][a-z]+,\s+[A-Z][\w.]*/.test(authors);
+      
+      if(authorCount >= 3){
+        exps.push('Multiple authors (' + authorCount + ') detected: +5');
+      }
+      
+      if(!authorFormatMatch){
         errors.push('Author format should be: Surname, F. I.');
         score-=8; exps.push('Author comma-initial format issue: −8');
       } else {
         exps.push('Author format correct: +5');
       }
       if(authors.includes(' and ') || (authors.includes('&') && !/,\s+&/.test(authors))){
-        errors.push('Multiple authors should be separated by comma before "&" in APA');
+        errors.push('Multiple authors should be separated with commas before "&"');
         score-=5; exps.push('Author separator format: −5');
       }
     } else if(apaLoose){
@@ -331,7 +368,7 @@ function parseOneCitation(raw, styleHint){
       const afterYr = text.replace(/^.*?\(\d{4}\)\.\s*/,'').trim();
       const parts = afterYr.split(/\.\s+/);
       title = parts[0]||''; journal=(parts[1]||'').split(',')[0].trim();
-      errors.push('Author format incorrect — expected: Smith, J. A., & Jones, B.');
+        errors.push('Author format incorrect - expected: Smith, J. A., & Jones, B.');
       score-=18; exps.push('APA loose match, author format errors: −18');
     } else {
       errors.push('Does not match APA format');
@@ -342,6 +379,11 @@ function parseOneCitation(raw, styleHint){
     if(mlaFull){
       authors=mlaFull[1]; title=mlaFull[2]; journal=mlaFull[3]; year=mlaFull[4];
       exps.push('MLA structure matched: +30');
+      // Check for multiple authors in MLA format
+      const mlaAuthorCount = (authors.match(/, and |, /g) || []).length + 1;
+      if(mlaAuthorCount >= 3){
+        exps.push('Multiple authors (' + mlaAuthorCount + ') detected: +5');
+      }
     } else {
       errors.push('Does not match MLA format');
       score-=20; exps.push('MLA format not matched: −20');
@@ -353,6 +395,11 @@ function parseOneCitation(raw, styleHint){
       const jM=text.match(/"[^"]+",\s+(.+?),\s+(?:vol\.|pp\.|20|19)/);
       journal=jM?jM[1].trim():'';
       exps.push('IEEE structure matched: +30');
+      // Check for multiple authors in IEEE format
+      const ieeeAuthorCount = (authors.match(/ and /g) || []).length + (authors.match(/,\s+/g) || []).length + 1;
+      if(ieeeAuthorCount >= 3){
+        exps.push('Multiple authors (' + ieeeAuthorCount + ') detected: +5');
+      }
     } else {
       errors.push('Does not match IEEE format');
       score-=20; exps.push('IEEE format not matched: −20');
@@ -378,7 +425,7 @@ function parseOneCitation(raw, styleHint){
     const qTitle=text.match(/[""""](.+?)[""""]/); if(qTitle) title=qTitle[1];
     if(!title){ const segs=text.split('.').map(s=>s.trim()).filter(Boolean); if(segs.length>1) title=segs[1]; }
     const segs2=text.split('.').map(s=>s.trim()).filter(Boolean); if(segs2.length>=3) journal=segs2[2];
-    errors.push('Citation style could not be determined — applying generic parse');
+      errors.push('Citation style could not be determined - applying generic parse');
     score-=12; exps.push('Unknown style generic parse: −12');
   }
 
@@ -391,7 +438,7 @@ function parseOneCitation(raw, styleHint){
     const hasCommaOrInitial = /,|[A-Z]\./.test(authors);
     if(isPlaceholder){ errors.push('Author field appears to be a placeholder'); score-=15; exps.push('Placeholder author: −15'); }
     else if(!hasCapital){ errors.push('Author names should begin with capital letters'); score-=10; exps.push('Author capitalisation: −10'); }
-    else if(!hasCommaOrInitial){ errors.push('Author format may be incorrect — expected surname-first with initials'); score-=8; exps.push('Author format quality: −8'); }
+    else if(!hasCommaOrInitial){ errors.push('Author format may be incorrect - expected surname-first with initials'); score-=8; exps.push('Author format quality: -8'); }
     else { exps.push('Authors look valid: +5'); }
   }
 
@@ -417,7 +464,21 @@ function parseOneCitation(raw, styleHint){
   }
 
   score = Math.max(5, Math.min(100, score));
-  const status = score>=75 ? 'Valid' : score>=35 ? 'Partial' : 'Invalid';
+  
+  // Determine if citation is hallucinated (contains placeholder/fake data)
+  const isHallucinated = /\b(unknown|placeholder|fake|example|sample|test|demo|n\.?a\.?|n\.d\.)\b/i.test(
+    (authors + ' ' + title + ' ' + journal).toLowerCase()
+  ) && errors.length > 0;
+  
+  let status;
+  if(isHallucinated) {
+    status = 'Hallucinated';
+    score = Math.min(score, 20);
+  } else if(score>=75) {
+    status = 'Valid';
+  } else {
+    status = 'Partially Valid';
+  }
 
   const a=authors||'Author, A.', t=title||'Unknown Title', j=journal||'Unknown Source', y=year||'n.d.';
   const authorLast=a.split(',')[0].trim();
@@ -550,9 +611,10 @@ async function analyzePDF(){
       const rawStr = item?.raw
         || ((item?.authors||'')+' ('+(item?.year||'n.d.')+'). '+(item?.title||'')+'. '+(item?.journal||'')+'.');
 
-      const parsed = parseOneCitation(rawStr,'auto') || {
+      // Use APA as default for PDF extraction, not auto-detect
+      const parsed = parseOneCitation(rawStr,'APA') || {
         raw: rawStr, authors:'', title:'', journal:'', year:'',
-        style:'Unknown', score:35, status:'Partial', errors:[], exps:[]
+        style:'APA', score:35, status:'Partially Valid', errors:[], exps:[]
       };
 
       if(item?.authors) parsed.authors=item.authors;
@@ -560,7 +622,7 @@ async function analyzePDF(){
       if(item?.journal) parsed.journal=item.journal;
       if(item?.year)    parsed.year=String(item.year);
 
-      const a=parsed.authors||'—', t=parsed.title||'—', j=parsed.journal||'—', y=parsed.year||'—';
+      const a=parsed.authors||'N/A', t=parsed.title||'N/A', j=parsed.journal||'N/A', y=parsed.year||'N/A';
       parsed.apa=`${a} (${y}). ${t}. <em>${j}</em>.`;
       parsed.mla=`${(a.split(',')[0]||a)}, ${(a.split(',')[1]||'').trim()}. "${t}." <em>${j}</em>, ${y}.`;
       parsed.ieee=`${a}, "${t}," <em>${j}</em>, ${y}.`;
@@ -609,27 +671,59 @@ async function processKeyword(){
   document.getElementById('kw-results').innerHTML='';
 
   try {
-    let filter = [];
-    if(yr !== 'all'){
-      const from = `${yr}-01-01`;
-      const until = `${parseInt(yr,10)+4}-12-31`;
-      filter.push(`from-pub-date:${from}`);
-      filter.push(`until-pub-date:${until}`);
+    let allPapers = [];
+    
+    // Crossref API
+    try {
+      let filter = [];
+      if(yr !== 'all'){
+        const from = `${yr}-01-01`;
+        const until = `${parseInt(yr,10)+4}-12-31`;
+        filter.push(`from-pub-date:${from}`);
+        filter.push(`until-pub-date:${until}`);
+      }
+
+      const url =
+        'https://api.crossref.org/works' +
+        `?query=${encodeURIComponent(kw)}` +
+        `&rows=${encodeURIComponent(Math.ceil(maxR/2))}` +
+        `&select=title,author,issued,container-title,DOI,type,URL` +
+        (filter.length ? `&filter=${encodeURIComponent(filter.join(','))}` : '');
+
+      document.getElementById('kw-loading').querySelector('.loading-text').textContent = 'Searching Crossref...';
+      const resp = await fetch(url);
+      if(resp.ok) {
+        const data = await resp.json();
+        const items = data?.message?.items || [];
+        allPapers = [...allPapers, ...items.slice(0, Math.ceil(maxR/2))];
+      }
+    } catch(e) {
+      console.log('Crossref search note:', e.message);
     }
 
-    const url =
-      'https://api.crossref.org/works' +
-      `?query=${encodeURIComponent(kw)}` +
-      `&rows=${encodeURIComponent(maxR)}` +
-      `&select=title,author,issued,container-title,DOI,type,URL` +
-      (filter.length ? `&filter=${encodeURIComponent(filter.join(','))}` : '');
+    // OpenAlex API (fallback/additional results)
+    try {
+      document.getElementById('kw-loading').querySelector('.loading-text').textContent = 'Searching OpenAlex...';
+      const openalex = await fetch(
+        `https://api.openalex.org/works?search=${encodeURIComponent(kw)}&per_page=${Math.ceil(maxR/2)}&sort=cited_by_count:desc`
+      );
+      if(openalex.ok) {
+        const data = await openalex.json();
+        const items = (data?.results || []).map(w => ({
+          title: w.title ? [w.title] : [],
+          author: (w.authorships || []).map(a => ({ family: a.author?.last_name, given: a.author?.first_name })),
+          issued: { 'date-parts': [[w.publication_year || new Date().getFullYear()]] },
+          'container-title': [w['host_venue']?.display_name || 'Unknown'],
+          DOI: w.doi ? w.doi.replace('https://doi.org/', '') : '',
+          URL: w.landing_page_url || w.doi || ''
+        }));
+        allPapers = [...allPapers, ...items.slice(0, Math.ceil(maxR/2))];
+      }
+    } catch(e) {
+      console.log('OpenAlex search note:', e.message);
+    }
 
-    // FIX: Do not set User-Agent header from browser JS (CORS forbidden)
-    const resp = await fetch(url);
-    if(!resp.ok) throw new Error(`Crossref error: HTTP ${resp.status}`);
-
-    const data = await resp.json();
-    const items = data?.message?.items || [];
+    const items = allPapers.slice(0, maxR);
     if(!items.length){
       loadEl.classList.remove('active');
       document.getElementById('kw-results').innerHTML =
@@ -757,7 +851,7 @@ function renderKeywordResults(papers){
       '<td style="max-width:130px;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(c.journal)+'</td>'+
       '<td style="font-family:\'DM Mono\',monospace">'+escapeHtml(c.year)+'</td>'+
       '<td style="max-width:170px;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
-        (c.doi ? ('<a href="https://doi.org/'+encodeURIComponent(c.doi)+'" target="_blank" rel="noopener noreferrer" style="color:var(--accent2);text-decoration:none">'+escapeHtml(c.doi)+'</a>') : '—')+
+        (c.doi ? ('<a href="https://doi.org/'+encodeURIComponent(c.doi)+'" target="_blank" rel="noopener noreferrer" style="color:var(--accent2);text-decoration:none">'+escapeHtml(c.doi)+'</a>') : 'N/A')+
       '</td>'+
       '<td><div style="display:flex;align-items:center;gap:5px"><div class="score-bar"><div class="score-fill" style="width:'+c.score+'%;background:#e8a838"></div></div>'+
       '<span style="font-size:0.75rem;color:#e8a838;font-family:\'DM Mono\',monospace">'+c.score+'%</span></div></td>'+
@@ -814,8 +908,8 @@ function renderResults(citations, containerId){
   window['_cits_'+containerId]=citations;
 
   const valid   =citations.filter(c=>c.status==='Valid').length;
-  const partial =citations.filter(c=>c.status==='Partial').length;
-  const invalid =citations.filter(c=>c.status==='Invalid').length;
+  const partial =citations.filter(c=>c.status==='Partially Valid').length;
+  const hallucinated =citations.filter(c=>c.status==='Hallucinated').length;
   const avgScore=Math.round(citations.reduce((a,c)=>a+c.score,0)/citations.length);
   const uid=Date.now()%100000;
   const bc='bc_'+uid, pc='pc_'+(uid+1);
@@ -835,8 +929,8 @@ function renderResults(citations, containerId){
       '<div class="card-top"><span class="card-title">'+escapeHtml(c.title||'Untitled')+'</span>'+getStatusBadge(c.status)+'</div>'+
       '<div class="card-meta">'+(c.style!=='Unknown'?'<span class="badge badge-style">'+escapeHtml(c.style)+'</span> ':'')+escapeHtml(c.year||'')+'</div>'+
       '<div class="card-fields">'+
-      '<div><div class="cf-label">Authors</div><div class="cf-val">'+escapeHtml(c.authors||'—')+'</div></div>'+
-      '<div><div class="cf-label">Source</div><div class="cf-val">'+escapeHtml(c.journal||'—')+'</div></div></div>'+
+        '<div><div class="cf-label">Authors</div><div class="cf-val">'+escapeHtml(c.authors||'N/A')+'</div></div>'+
+        '<div><div class="cf-label">Source</div><div class="cf-val">'+escapeHtml(c.journal||'N/A')+'</div></div></div>'+
       '<div class="score-row">'+
       '<div class="score-bar"><div class="score-fill" style="width:'+c.score+'%;background:'+getScoreColor(c.score)+'"></div></div>'+
       '<span class="score-num" style="color:'+getScoreColor(c.score)+'">'+c.score+'%</span>'+
@@ -850,10 +944,10 @@ function renderResults(citations, containerId){
     citations.map((c,i)=>'<tr>'+
       '<td style="font-family:\'DM Mono\',monospace;color:var(--text3)">'+(i+1)+'</td>'+
       '<td><span class="badge badge-style">'+escapeHtml(c.style)+'</span></td>'+
-      '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(c.authors||'—')+'</td>'+
-      '<td style="max-width:160px">'+escapeHtml(c.title||'—')+'</td>'+
-      '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.72rem">'+escapeHtml(c.journal||'—')+'</td>'+
-      '<td style="font-family:\'DM Mono\',monospace">'+escapeHtml(c.year||'—')+'</td>'+
+        '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(c.authors||'N/A')+'</td>'+
+        '<td style="max-width:160px">'+escapeHtml(c.title||'N/A')+'</td>'+
+        '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.72rem">'+escapeHtml(c.journal||'N/A')+'</td>'+
+        '<td style="font-family:\'DM Mono\',monospace">'+escapeHtml(c.year||'N/A')+'</td>'+
       '<td><div style="display:flex;align-items:center;gap:5px"><div class="score-bar"><div class="score-fill" style="width:'+c.score+'%;background:'+getScoreColor(c.score)+'"></div></div>'+
       '<span style="font-size:0.75rem;color:'+getScoreColor(c.score)+';font-family:\'DM Mono\',monospace">'+c.score+'%</span></div></td>'+
       '<td>'+getStatusBadge(c.status)+'</td></tr>').join('')+
@@ -869,8 +963,8 @@ function renderResults(citations, containerId){
     '<div class="dash-stats">'+
     '<div class="stat-card"><span class="stat-num" style="color:var(--accent2)">'+citations.length+'</span><span class="stat-label">Total</span></div>'+
     '<div class="stat-card stat-valid"><span class="stat-num">'+valid+'</span><span class="stat-label">Valid</span></div>'+
-    '<div class="stat-card stat-partial"><span class="stat-num">'+partial+'</span><span class="stat-label">Partial</span></div>'+
-    '<div class="stat-card stat-invalid"><span class="stat-num">'+invalid+'</span><span class="stat-label">Invalid</span></div>'+
+    '<div class="stat-card stat-partial"><span class="stat-num">'+partial+'</span><span class="stat-label">Partially Valid</span></div>'+
+    '<div class="stat-card stat-invalid"><span class="stat-num">'+hallucinated+'</span><span class="stat-label">Hallucinated</span></div>'+
     '<div class="stat-card stat-score"><span class="stat-num">'+avgScore+'%</span><span class="stat-label">Avg Score</span></div>'+
     '</div>'+
     '<div class="chart-wrap">'+
@@ -886,7 +980,7 @@ function renderResults(citations, containerId){
   setTimeout(()=>{
     new Chart(document.getElementById(pc),{
       type:'doughnut',
-      data:{labels:['Valid','Partial','Invalid'],datasets:[{data:[valid,partial,invalid],backgroundColor:['#3ed9a8','#f0a840','#f06060'],borderWidth:0}]},
+      data:{labels:['Valid','Partially Valid','Hallucinated'],datasets:[{data:[valid,partial,hallucinated],backgroundColor:['#3ed9a8','#f0a840','#f06060'],borderWidth:0}]},
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{color:'#a09cb8',font:{size:10},boxWidth:10}}}}
     });
     new Chart(document.getElementById(bc),{
@@ -909,7 +1003,7 @@ function copyKw(idx){
 }
 function _copyFmt(c){
   const text='APA: '+c.apa.replace(/<[^>]+>/g,'')+'\nMLA: '+c.mla.replace(/<[^>]+>/g,'')+'\nIEEE: '+c.ieee.replace(/<[^>]+>/g,'');
-  navigator.clipboard.writeText(text).then(()=>showToast('Citations copied!')).catch(()=>showToast('Copy failed — please copy manually.'));
+  navigator.clipboard.writeText(text).then(()=>showToast('Citations copied!')).catch(()=>showToast('Copy failed - please copy manually.'));
 }
 function exportCSV(cits){
   if(!cits){showToast('No data to export.');return;}
