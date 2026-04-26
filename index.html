@@ -1,125 +1,1027 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CiteVerify - Advanced Citation System</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-
 <style>
-:root{--bg:#0f0e17;--surface:#1a1828;--surface2:#222035;--surface3:#2a2840;--accent:#e8a838;--accent2:#7c6dfa;--danger:#f06060;--warn:#f0a840;--success:#3ed9a8;--text:#f0ede8;--text2:#a09cb8;--text3:#6b678a;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--radius:10px;--radius-lg:16px}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
-header{padding:2rem 2.5rem 1rem;border-bottom:1px solid var(--border)}
-.logo{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;letter-spacing:-0.5px}
-.logo span{color:var(--accent)}
-.logo sub{font-size:0.65rem;color:var(--text2);font-family:'DM Mono',monospace;letter-spacing:2px;vertical-align:middle;margin-left:8px;text-transform:uppercase}
-.tagline{font-size:0.8rem;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace;letter-spacing:1px}
-.tabs{display:flex;gap:4px;padding:1.5rem 2.5rem 0;border-bottom:1px solid var(--border)}
-.tab{padding:0.65rem 1.4rem;border-radius:var(--radius) var(--radius) 0 0;cursor:pointer;font-size:0.85rem;font-weight:600;letter-spacing:0.5px;color:var(--text2);border:1px solid transparent;border-bottom:none;transition:all 0.2s;background:transparent;text-transform:uppercase;font-family:'DM Mono',monospace}
-.tab:hover{color:var(--text);background:var(--surface)}
-.tab.active{color:var(--accent);background:var(--surface2);border-color:var(--border)}
-.panel{display:none;padding:2rem 2.5rem}
-.panel.active{display:block}
-.section-title{font-family:'Fraunces',serif;font-size:1.1rem;font-weight:600;margin-bottom:1rem;color:var(--text);display:flex;align-items:center;gap:8px}
-.section-title::before{content:'';width:3px;height:18px;background:var(--accent);border-radius:2px;display:inline-block}
-textarea{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'DM Mono',monospace;font-size:0.82rem;padding:1rem;resize:vertical;outline:none;transition:border-color 0.2s;line-height:1.7}
-textarea:focus{border-color:var(--accent2)}
-select,input[type=text]{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:'Nunito',sans-serif;font-size:0.9rem;padding:0.5rem 1rem;outline:none;transition:border-color 0.2s}
-select:focus,input[type=text]:focus{border-color:var(--accent2)}
-.row{display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1.2rem}
-.field{display:flex;flex-direction:column;gap:4px}
-.field label{font-size:0.75rem;color:var(--text2);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase}
-.btn{padding:0.6rem 1.4rem;border-radius:var(--radius);font-family:'Nunito',sans-serif;font-weight:700;font-size:0.85rem;cursor:pointer;border:none;transition:all 0.18s}
-.btn-primary{background:var(--accent);color:#1a1000}
-.btn-primary:hover{background:#f5bb50;transform:translateY(-1px)}
-.btn-secondary{background:var(--surface3);color:var(--text);border:1px solid var(--border2)}
-.btn-secondary:hover{border-color:var(--accent2);color:var(--accent2)}
-.btn-sm{padding:0.35rem 0.9rem;font-size:0.78rem}
-.upload-zone{border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:3rem 2rem;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--surface)}
-.upload-zone:hover,.upload-zone.dragover{border-color:var(--accent2);background:rgba(124,109,250,0.06)}
-.upload-zone .icon{font-size:2.5rem;margin-bottom:0.75rem;display:block}
-.upload-zone h3{font-size:1rem;margin-bottom:0.3rem;color:var(--text)}
-.upload-zone p{font-size:0.82rem;color:var(--text3)}
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:0.72rem;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:0.5px}
-.badge-valid{background:rgba(62,217,168,0.15);color:var(--success)}
-.badge-partial{background:rgba(240,168,64,0.15);color:var(--warn)}
-.badge-invalid{background:rgba(240,96,96,0.15);color:var(--danger)}
-.badge-hallucinated{background:rgba(240,96,96,0.15);color:var(--danger)}
-.badge-style{background:rgba(124,109,250,0.15);color:var(--accent2)}
-.score-bar{height:4px;border-radius:2px;background:var(--surface3);overflow:hidden;width:80px;display:inline-block;vertical-align:middle}
-.score-fill{height:100%;border-radius:2px}
-.views-container{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
-@media(max-width:900px){.views-container{grid-template-columns:1fr}}
-.view-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
-.view-panel-header{padding:0.7rem 1.1rem;background:var(--surface2);border-bottom:1px solid var(--border);font-size:0.72rem;font-family:'DM Mono',monospace;color:var(--text2);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:6px}
-.card-list{padding:1rem;display:flex;flex-direction:column;gap:0.8rem;max-height:680px;overflow-y:auto}
-.citation-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;transition:border-color 0.2s}
-.citation-card:hover{border-color:var(--border2)}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem}
-.card-title{font-size:0.88rem;font-weight:700;line-height:1.4;color:var(--text)}
-.card-meta{font-size:0.78rem;color:var(--text2);margin-bottom:0.5rem}
-.card-fields{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 12px;margin:0.5rem 0}
-.cf-label{font-size:0.68rem;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px}
-.cf-val{font-size:0.8rem;color:var(--text)}
-.score-row{display:flex;align-items:center;gap:8px;margin-top:0.5rem}
-.score-num{font-size:0.78rem;font-family:'DM Mono',monospace;font-weight:600}
-.errors-list{margin-top:0.5rem;padding:0.5rem 0.7rem;background:rgba(240,96,96,0.06);border-radius:6px;border:1px solid rgba(240,96,96,0.15)}
-.error-item{font-size:0.76rem;color:var(--danger);display:flex;align-items:flex-start;gap:5px;line-height:1.4;padding:1px 0}
-.error-item::before{content:'▸';flex-shrink:0;margin-top:1px}
-.explain-box{margin-top:0.5rem;padding:0.5rem 0.7rem;background:rgba(124,109,250,0.06);border-radius:6px;border:1px solid rgba(124,109,250,0.15)}
-.explain-title{font-size:0.7rem;color:var(--accent2);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
-.explain-item{font-size:0.74rem;color:var(--text2);padding:1px 0}
-.formats-box{margin-top:0.6rem;padding:0.6rem 0.8rem;background:var(--surface3);border-radius:6px}
-.formats-title{font-size:0.7rem;color:var(--accent);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
-.format-item{margin-bottom:4px}
-.format-label{font-size:0.7rem;color:var(--text3);font-family:'DM Mono',monospace;display:inline-block;min-width:36px}
-.format-text{font-size:0.76rem;color:var(--text2)}
-.copy-btn{float:right;font-size:0.65rem;padding:2px 6px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-family:'DM Mono',monospace}
-.copy-btn:hover{color:var(--accent);border-color:var(--accent)}
-.table-wrap{overflow-x:auto;max-height:680px;overflow-y:auto}
-table{width:100%;border-collapse:collapse;font-size:0.78rem}
-th{padding:0.6rem 0.8rem;text-align:left;font-size:0.68rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.8px;color:var(--text3);border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--surface2)}
-td{padding:0.55rem 0.8rem;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text2)}
-td:first-child{color:var(--text)}
-tr:hover td{background:rgba(255,255,255,0.02)}
-.dashboard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-top:2rem}
-.dash-title{font-family:'Fraunces',serif;font-size:1rem;font-weight:600;margin-bottom:1rem;color:var(--text)}
-.dash-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.8rem;margin-bottom:1.5rem}
-.stat-card{background:var(--surface2);border-radius:var(--radius);padding:0.9rem 1rem;text-align:center}
-.stat-num{font-size:1.8rem;font-weight:700;font-family:'Fraunces',serif;display:block;margin-bottom:2px}
-.stat-label{font-size:0.7rem;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.8px;text-transform:uppercase}
-.stat-valid .stat-num{color:var(--success)}
-.stat-partial .stat-num{color:var(--warn)}
-.stat-invalid .stat-num{color:var(--danger)}
-.stat-score .stat-num{color:var(--accent)}
-.chart-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-@media(max-width:700px){.chart-wrap{grid-template-columns:1fr}}
-.chart-box{background:var(--surface2);border-radius:var(--radius);padding:1rem}
-.chart-box-title{font-size:0.72rem;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.7rem}
-.export-bar{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border)}
-.export-bar label{font-size:0.78rem;color:var(--text3);font-family:'DM Mono',monospace;align-self:center;text-transform:uppercase;letter-spacing:0.5px}
-.loading{display:none;text-align:center;padding:2rem}
-.loading.active{display:block}
-.spinner{width:36px;height:36px;border:3px solid var(--border2);border-top-color:var(--accent2);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 1rem}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-family:'DM Mono',monospace;font-size:0.82rem;color:var(--text2);animation:pulse 1.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-.empty-state{text-align:center;padding:3rem 2rem;color:var(--text3)}
-.empty-state .icon{font-size:2.5rem;display:block;margin-bottom:0.7rem;opacity:0.4}
-.empty-state p{font-size:0.85rem}
-.toast{position:fixed;bottom:2rem;right:2rem;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:0.7rem 1.2rem;font-size:0.82rem;color:var(--text);z-index:1000;transform:translateY(20px);opacity:0;transition:all 0.3s;pointer-events:none}
-.toast.show{transform:translateY(0);opacity:1}
-.kw-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:0.5rem;margin-bottom:1rem}
-.chip{padding:3px 10px;background:rgba(124,109,250,0.15);border:1px solid rgba(124,109,250,0.25);border-radius:20px;font-size:0.76rem;color:var(--accent2);font-family:'DM Mono',monospace}
-input[type=file]{display:none}
-.file-info{display:flex;align-items:center;gap:8px;padding:0.6rem 0.9rem;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border2);font-size:0.82rem;margin-top:0.8rem}
-.fname{font-weight:700;color:var(--text)}
-.fsize{color:var(--text3);font-family:'DM Mono',monospace;font-size:0.75rem}
-.small-note{font-size:0.75rem;color:var(--text3);font-family:'DM Mono',monospace;margin-top:0.6rem}
+:root {
+  --bg: #0f0e17;
+  --surface: #1a1828;
+  --surface2: #222035;
+  --surface3: #2a2840;
+  --accent: #e8a838;
+  --accent2: #7c6dfa;
+  --danger: #f06060;
+  --warn: #f0a840;
+  --success: #3ed9a8;
+  --text: #f0ede8;
+  --text2: #a09cb8;
+  --text3: #6b678a;
+  --border: rgba(255, 255, 255, 0.07);
+  --border2: rgba(255, 255, 255, 0.13);
+  --radius: 10px;
+  --radius-lg: 16px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Poppins', sans-serif;
+  font-size: 20px;
+  line-height: 1.65;
+  min-height: 100vh;
+}
+
+header {
+  padding: 2rem 2.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'Fraunces', serif;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.logo sub {
+  font-size: 0.8rem;
+  color: var(--text2);
+  font-family: 'Poppins', monospace;
+  letter-spacing: 2px;
+  vertical-align: middle;
+  margin-left: 8px;
+  text-transform: uppercase;
+}
+
+.tagline {
+  font-size: 1.2rem;
+  color: var(--text3);
+  margin-top: 2px;
+  font-family: 'Poppins', monospace;
+  letter-spacing: 1px;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 1.5rem 2.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 0.65rem 1.4rem;
+  border-radius: var(--radius) var(--radius) 0 0;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: all 0.2s;
+  background: transparent;
+  text-transform: uppercase;
+  font-family: 'Poppins', monospace;
+}
+
+.tab:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.tab.active {
+  color: var(--accent);
+  background: var(--surface2);
+  border-color: var(--border);
+}
+
+.panel {
+  display: none;
+  padding: 2rem 2.5rem;
+}
+
+.panel.active {
+  display: block;
+}
+
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 18px;
+  background: var(--accent);
+  border-radius: 2px;
+  display: inline-block;
+}
+
+textarea {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Poppins', monospace;
+  font-size: 0.8rem;
+  padding: 1rem;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  line-height: 1.7;
+}
+
+textarea:focus {
+  border-color: var(--accent2);
+}
+
+select,
+input[type="text"] {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+select:focus,
+input[type="text"]:focus {
+  border-color: var(--accent2);
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 0.9rem;
+  color: var(--text2);
+  font-family: 'Poppins', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.btn {
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--radius);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.18s;
+}
+
+.btn-correct {
+  background: var(--success);
+  color: #041f17;
+}
+
+.btn-correct:hover {
+  background: #58e6ba;
+  color: #041f17;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #1a1000;
+}
+
+.btn-primary:hover {
+  background: #f5bb50;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--surface3);
+  color: var(--text);
+  border: 1px solid var(--border2);
+}
+
+.btn-secondary:hover {
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+
+.btn-sm {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+}
+
+.upload-zone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+  border-color: var(--accent2);
+  background: rgba(124, 109, 250, 0.06);
+}
+
+.upload-zone .icon {
+  font-size: 2.7rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.upload-zone h3 {
+  font-size: 1.4rem;
+  margin-bottom: 0.3rem;
+  color: var(--text);
+}
+
+.upload-zone p {
+  font-size: 1.1rem;
+  color: var(--text3);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 0.9rem;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border2);
+  font-size: 1rem;
+  margin-top: 0.8rem;
+}
+
+.fname {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.fsize {
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  font-size: 1rem;
+}
+
+.small-note {
+  font-size: 1rem;
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  margin-top: 0.6rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'Poppins', monospace;
+  letter-spacing: 0.5px;
+}
+
+.badge-valid {
+  background: rgba(62, 217, 168, 0.15);
+  color: var(--success);
+}
+
+.badge-partial {
+  background: rgba(240, 168, 64, 0.15);
+  color: var(--warn);
+}
+
+.badge-hallucinated {
+  background: rgba(240, 96, 96, 0.15);
+  color: var(--danger);
+}
+
+.badge-style {
+  background: rgba(124, 109, 250, 0.15);
+  color: var(--accent2);
+}
+
+.badge-api {
+  background: rgba(232, 168, 56, 0.15);
+  color: var(--accent);
+}
+
+.score-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface3);
+  overflow: hidden;
+  width: 90px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.score-num {
+  font-size: 0.8rem;
+  font-family: 'Poppins', monospace;
+  font-weight: 600;
+}
+
+.views-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .views-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.view-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.view-panel-header {
+  padding: 0.7rem 1.1rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  font-size: 1rem;
+  font-family: 'Poppins', monospace;
+  color: var(--text2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-between;
+}
+
+.card-list {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-height: 680px;
+  overflow-y: auto;
+}
+
+.citation-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  transition: border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.citation-card:hover {
+  border-color: var(--border2);
+}
+
+.card-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px;
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 0.5rem;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--text);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.card-top .badge {
+  justify-self: end;
+  width: 160px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  white-space: normal;
+  padding: 4px 8px;
+}
+
+.card-meta {
+  font-size: 1rem;
+  color: var(--text2);
+  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.card-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+  margin: 0.5rem 0;
+}
+
+.cf-label {
+  font-size: 0.9rem;
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cf-val {
+  font-size: 1rem;
+  color: var(--text);
+  font-family: 'Poppins', sans-serif;
+}
+
+.errors-list {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  background: rgba(240, 96, 96, 0.06);
+  border-radius: 6px;
+  border: 1px solid rgba(240, 96, 96, 0.15);
+}
+
+.error-item {
+  font-size: 0.9rem;
+  font-family: 'Poppins', sans-serif;
+  color: var(--danger);
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  line-height: 1.4;
+  padding: 1px 0;
+}
+
+.error-item::before {
+  content: '▸';
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.explain-box {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  background: rgba(124, 109, 250, 0.06);
+  border-radius: 6px;
+  border: 1px solid rgba(124, 109, 250, 0.15);
+}
+
+.explain-title {
+  font-size: 1rem;
+  color: var(--accent2);
+  font-family: 'Poppins', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.explain-item {
+  font-size: 0.9rem;
+  color: var(--text2);
+  padding: 1px 0;
+}
+
+.formats-box {
+  margin-top: 0.6rem;
+  padding: 0.8rem 0.8rem;
+  background: var(--surface3);
+  border-radius: 6px;
+}
+
+.formats-title {
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-family: 'Poppins', monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.format-item {
+  margin-bottom: 4px;
+}
+
+.format-label {
+  font-size: 1rem;
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  display: inline-block;
+  min-width: 38px;
+}
+
+.format-text {
+  font-size: 0.9rem;
+  color: var(--text2);
+  font-family: 'Poppins', sans-serif;
+}
+
+.copy-btn {
+  float: right;
+  font-size: 0.9rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  cursor: pointer;
+  font-family: 'Poppins', monospace;
+}
+
+.copy-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.table-wrap {
+  width: 100%;
+  max-height: 680px;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.citation-table {
+  width: 100%;
+  min-width: 980px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 1rem;
+}
+
+.citation-table th {
+  padding: 0.75rem 0.8rem;
+  text-align: left;
+  font-size: 0.9rem;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface2);
+  z-index: 2;
+}
+
+.citation-table td {
+  padding: 0.8rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--text2);
+  line-height: 1.45;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.citation-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.citation-table .col-index {
+  width: 5%;
+  font-family: 'DM Mono', monospace;
+  color: var(--text3);
+}
+
+.citation-table .col-style {
+  width: 9%;
+}
+
+.citation-table .col-title {
+  width: 25%;
+  color: var(--text);
+}
+
+.citation-table .col-source {
+  width: 18%;
+}
+
+.citation-table .col-year {
+  width: 8%;
+  font-family: 'DM Mono', monospace;
+}
+
+.citation-table .col-api {
+  width: 10%;
+  font-family: 'DM Mono', monospace;
+}
+
+.citation-table .col-score {
+  width: 13%;
+}
+
+.citation-table .col-status {
+  width: 12%;
+}
+
+.table-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.table-score .score-bar {
+  width: 75px;
+  flex-shrink: 0;
+}
+
+.table-score .score-num {
+  font-size: 0.85rem;
+  font-family: 'DM Mono', monospace;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.col-status .badge {
+  white-space: normal;
+  justify-content: center;
+  text-align: center;
+  min-width: 95px;
+}
+
+.dashboard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.dash-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text);
+}
+
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Fraunces', serif;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.stat-label {
+  font-size: 1rem;
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.stat-valid .stat-num {
+  color: var(--success);
+}
+
+.stat-partial .stat-num {
+  color: var(--warn);
+}
+
+.stat-invalid .stat-num {
+  color: var(--danger);
+}
+
+.stat-score .stat-num {
+  color: var(--accent);
+}
+
+.chart-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 700px) {
+  .chart-wrap {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-box {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.chart-box-title {
+  font-size: 1rem;
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 0.7rem;
+}
+
+.export-bar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.export-bar label {
+  font-size: 1rem;
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  align-self: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.loading {
+  display: none;
+  text-align: center;
+  padding: 2rem;
+}
+
+.loading.active {
+  display: block;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border2);
+  border-top-color: var(--accent2);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-text {
+  font-family: 'Poppins', monospace;
+  font-size: 1rem;
+  color: var(--text2);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text3);
+}
+
+.empty-state .icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.7rem;
+  opacity: 0.4;
+}
+
+.empty-state p {
+  font-size: 1rem;
+}
+
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  color: var(--text);
+  z-index: 1000;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.kw-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.chip {
+  padding: 3px 10px;
+  background: rgba(124, 109, 250, 0.15);
+  border: 1px solid rgba(124, 109, 250, 0.25);
+  border-radius: 20px;
+  font-size: 1rem;
+  color: var(--accent2);
+  font-family: 'Poppins', monospace;
+}
+
+/* Links */
+
+a.link {
+  color: var(--accent2);
+  text-decoration: none;
+}
+
+a.link:hover {
+  text-decoration: underline;
+}
+
+.details {
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.details summary {
+  cursor: pointer;
+  font-family: 'Poppins', monospace;
+  color: var(--text2);
+  font-size: 1rem;
+}
+
+.details .kv {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 6px 10px;
+  margin-top: 0.6rem;
+  font-size: 1.2rem;
+  color: var(--text2);
+}
+
+.details .k {
+  color: var(--text3);
+  font-family: 'Poppins', monospace;
+  text-transform: uppercase;
+  font-size: 1rem;
+  letter-spacing: 0.6px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-family: 'Poppins', monospace;
+  color: var(--text3);
+}
+
+.progress {
+  width: 140px;
+  height: 6px;
+  border-radius: 20px;
+  background: var(--surface3);
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.progress > i {
+  display: block;
+  height: 100%;
+}
+
+.correct-box {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+
+.correct-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.correct-title span {
+  font-size: 1rem;
+  color: var(--text2);
+  font-family: 'Poppins', monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.cand {
+  padding: 10px;
+  border-radius: 10px;
+  background: var(--surface3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 10px;
+}
+
+.cand-meta {
+  font-size: 1rem;
+  color: var(--text3);
+  margin-top: 2px;
+}
+
+.cand-apa {
+  margin-top: 6px;
+  font-size: 1rem;
+  color: var(--text2);
+  line-height: 1.55;
+}
+
+.cand-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 </style>
-</head>
 
 <body>
 <header>
@@ -128,9 +1030,9 @@ input[type=file]{display:none}
       <div class="logo">Cite<span>Verify</span><sub>AI</sub></div>
       <div class="tagline">Citation Verification · Correction · Generation · Analytics</div>
     </div>
-    <div style="font-size:0.72rem;color:var(--text3);font-family:'DM Mono',monospace;text-align:right">
+    <div style="font-size:0.8rem;color:var(--text3);font-family:'Poppins',monospace;text-align:right">
       <div>Styles: APA - MLA - Chicago - IEEE - Vancouver</div>
-      <div style="margin-top:2px">APIs: Crossref - OpenAlex - Semantic Scholar - Europe PMC - arXiv - CORE</div>
+      <div style="margin-top:2px">APIs: Crossref - OpenAlex - Semantic Scholar - arXiv</div>
       <div style="margin-top:2px">Export: CSV - JSON - Clipboard</div>
     </div>
   </div>
@@ -142,16 +1044,16 @@ input[type=file]{display:none}
   <button class="tab" onclick="switchTab('keyword')">🔍 Keyword Search</button>
 </div>
 
-<!-- PASTE MODE -->
 <div id="panel-paste" class="panel active">
   <div class="section-title">Paste Citations</div>
-  <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">Paste one citation per line. Validates, scores, and reformats each one.</p>
+  <p style="font-family: 'Poppins', sans-serif; font-size:0.9rem;color:var(--text3);margin-bottom:1rem">Paste one citation per line. Detects style, parses fields, verifies using public APIs, and explains confidence.</p>
   <textarea id="paste-input" rows="7" placeholder="Smith, J. A., &amp; Brown, L. T. (2020). Deep learning approaches for crowd density estimation. Journal of Computer Vision Research, 45(3), 123-145."></textarea>
   <div class="row" style="margin-top:1rem">
     <div class="field">
       <label>Citation Style</label>
       <select id="paste-style">
-        <option value="APA" selected>APA</option>
+        <option value="auto" selected>Auto-detect</option>
+        <option value="APA">APA</option>
         <option value="MLA">MLA</option>
         <option value="Chicago">Chicago/Turabian</option>
         <option value="IEEE">IEEE</option>
@@ -165,47 +1067,40 @@ input[type=file]{display:none}
   <div id="paste-results"></div>
 </div>
 
-<!-- PDF MODE -->
 <div id="panel-pdf" class="panel">
   <div class="section-title">PDF Upload</div>
-  <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">
-    Upload a PDF - the backend reads it with AI, extracts ALL references, and analyzes them.
+  <p style="font-family: 'Poppins', sans-serif; font-size:0.9rem;color:var(--text3);margin-bottom:1rem">
+    Upload a PDF - the backend extracts references and then this UI verifies them via public APIs.
   </p>
-
   <div class="upload-zone" id="drop-zone"
        onclick="document.getElementById('pdf-input').click()"
        ondragover="dragOver(event)" ondragleave="dragLeave()"
        ondrop="dropFile(event)">
     <span class="icon">📂</span>
-    <h3>Drop PDF here or click to browse</h3>
-    <p>Works best if the PDF has selectable text (not scanned images)</p>
+    <h4>Drop PDF here or click to browse</h4>
+    <p style="font-size:0.9rem;color:var(--text3);margin-bottom:1rem">Works best if the PDF has selectable text (not scanned images)</p>
   </div>
-
-  <input type="file" id="pdf-input" accept=".pdf" onchange="handlePDFUpload(event)">
-
+  <input type="file" id="pdf-input" accept=".pdf" onchange="handlePDFUpload(event)" />
   <div id="file-info-area"></div>
   <div class="small-note" id="pdf-debug-note"></div>
-
   <div style="margin-top:1rem">
     <button class="btn btn-primary" id="pdf-analyze-btn" style="display:none" onclick="analyzePDF()">Extract &amp; Analyze</button>
   </div>
-
-  <div class="loading" id="pdf-loading"><div class="spinner"></div><div class="loading-text">AI is reading your PDF and extracting citations…</div></div>
+  <div class="loading" id="pdf-loading"><div class="spinner"></div><div class="loading-text">Reading your PDF…</div></div>
   <div id="pdf-results"></div>
 </div>
 
-<!-- KEYWORD MODE -->
 <div id="panel-keyword" class="panel">
   <div class="section-title">Keyword Search</div>
-  <p style="font-size:0.82rem;color:var(--text3);margin-bottom:1rem">Uses Crossref to fetch REAL papers. DOI links are clickable.</p>
+  <p style="font-family: 'Poppins', sans-serif; font-size:0.9rem;color:var(--text3);margin-bottom:1rem">Uses Crossref/OpenAlex (public) to fetch REAL papers. Links are clickable.</p>
   <div class="row">
     <div class="field" style="flex:1">
       <label>Search Keywords</label>
-      <input type="text" id="kw-input" placeholder='"crowd analysis" deep learning, computer vision' style="width:100%">
+      <input type="text" id="kw-input" placeholder='"crowd analysis" deep learning, computer vision' style="width:100%;font-size:0.9rem;" />
     </div>
     <div class="field">
       <label>Year Range</label>
-      <select id="kw-year">
+      <select id="kw-year" font size="0.9rem">
         <option value="all">All Years</option>
         <option value="2020">2020-2024</option>
         <option value="2015">2015-2019</option>
@@ -223,358 +1118,691 @@ input[type=file]{display:none}
     <button class="btn btn-primary" onclick="processKeyword()">Search Papers</button>
   </div>
   <div id="kw-chips-area"></div>
-  <div class="loading" id="kw-loading"><div class="spinner"></div><div class="loading-text">Finding real academic papers via Crossref…</div></div>
+  <div class="loading" id="kw-loading"><div class="spinner"></div><div class="loading-text">Finding real academic papers…</div></div>
   <div id="kw-results"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-/**
- * CiteVerify - Advanced Citation System
- * 
- * APIs Integrated:
- * - Crossref API: https://api.crossref.org (no auth needed)
- * - OpenAlex API: https://api.openalex.org (no auth needed)
- * - Semantic Scholar API: https://api.semanticscholar.org (optional)
- * - Europe PMC API: https://www.ebi.ac.uk/europepmc/webservices (no auth)
- * - arXiv API: https://arxiv.org/api (no auth)
- * - CORE API: https://core.ac.uk/api (optional key)
- * - Backend AI API: http://localhost:3000/api/analyze-pdf (requires Anthropic API key)
- * - Health Check API: http://localhost:3000/health (backend status)
- * 
- * IMPORTANT:
- * - Live Server serves only the frontend.
- * - PDF extraction must be done by a backend (server.js) because it needs your Anthropic API key.
- * - Start backend on http://localhost:3000
- */
-
-// ─── Globals ────────────────────────────────────────────────────────────────
 const CURRENT_YEAR = new Date().getFullYear();
+const BACKEND_BASE = "http://localhost:3000";
 
-// FIX: Always call backend on port 3000, not Live Server origin (5500)
-const PDF_API_BASE = "http://localhost:3000";
-
-// API Endpoints
-const API_ENDPOINTS = {
-  crossref: 'https://api.crossref.org',
-  openalex: 'https://api.openalex.org',
-  semanticScholar: 'https://api.semanticscholar.org',
-  europePMC: 'https://www.ebi.ac.uk/europepmc/webservices',
-  arxiv: 'https://arxiv.org/api',
-  core: 'https://core.ac.uk/api',
-  aiBackend: PDF_API_BASE + '/api/analyze-pdf',
-  healthCheck: PDF_API_BASE + '/health'
-};
-
+/* ---------------- UI utils ---------------- */
 function switchTab(id){
-  const ids=['paste','pdf','keyword'];
-  document.querySelectorAll('.tab').forEach((t,i)=>{
-    t.classList.toggle('active', ids[i]===id);
-  });
+  const ids = ['paste','pdf','keyword'];
+  document.querySelectorAll('.tab').forEach((t,i)=> t.classList.toggle('active', ids[i]===id));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
 }
-
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
-
-function getScoreColor(s){
-  if(s>=75) return '#3ed9a8';
-  if(s>=35) return '#f0a840';
-  return '#f06060';
+function escapeHtml(s){
+  return String(s ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
 }
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function getScoreColorPercent(p){ if(p>=0.85) return '#3ed9a8'; if(p>=0.6) return '#f0a840'; return '#f06060'; }
+function getScoreColor(score0to100){ const s = Number(score0to100) || 0; if(s>=75) return '#3ed9a8'; if(s>=35) return '#f0a840'; return '#f06060'; }
 
-function getStatusBadge(s){
-  if(s==='Valid')   return '<span class="badge badge-valid">✓ Valid</span>';
+function getStatusBadge(s, c){
+  if(s === 'Retracted' || (c && c.isRetracted)){
+    return '<span class="badge badge-hallucinated" style="background:rgba(240,96,96,0.15);color:var(--danger)">🚫 RETRACTED</span>';
+  }
+  if(s==='Valid') return '<span class="badge badge-valid">✓ Valid</span>';
   if(s==='Partially Valid') return '<span class="badge badge-partial">⚠ Partially Valid</span>';
-  if(s==='Hallucinated') return '<span class="badge badge-invalid">👁 Hallucinated</span>';
-  return '<span class="badge badge-valid">✓ Valid</span>';
+  if(s==='Hallucinated') return '<span class="badge badge-hallucinated">👁 Hallucinated</span>';
+  if(s==='Corrected') return '<span class="badge badge-valid">🛠 Corrected</span>';
+
+  return '<span class="badge badge-partial">⚠ Unknown</span>';
 }
 
-// ─── Citation Parser ─────────────────────────────────────────────────────────
-function parseOneCitation(raw, styleHint){
-  const text = raw.trim();
-  if(!text) return null;
+/* -------------- Similarity helpers -------------- */
+const STOPWORDS = new Set([
+  'a','an','the','and','or','of','for','to','in','on','with','without','via',
+  'from','by','at','as','into','over','under','between','among',
+  'study','studies','approach','approaches','analysis','results','method','methods',
+  'paper','article','research'
+]);
 
-  let detectedStyle='Unknown', authors='', title='', journal='', year='';
-  const errors=[], exps=[];
-  let score=100;
-
-  const allYears = [...text.matchAll(/\b(1[89]\d{2}|20[0-2]\d)\b/g)].map(m=>m[0]);
-  const futureYears = [...text.matchAll(/\b(20[3-9]\d|2[1-9]\d{2}|[3-9]\d{3})\b/g)].map(m=>m[0]);
-  const validYears  = allYears.filter(y=>parseInt(y)<=CURRENT_YEAR);
-  year = validYears[0] || '';
-
-  if(futureYears.length && !validYears.length){
-    year = futureYears[0];
-    errors.push('Publication year '+year+' is in the future - this citation cannot be valid');
-    score -= 45;
-    exps.push('Future year '+year+': −45 (hard cap applied)');
-  } else if(!year){
-    errors.push('Missing publication year');
-    score -= 20;
-    exps.push('Year not found: −20');
-  } else {
-    exps.push('Year '+year+' valid: +0');
+function normalizeTitle(t){
+  return String(t||'')
+    .toLowerCase()
+    .replace(/[\u2018\u2019]/g,"'")
+    .replace(/[\u201C\u201D]/g,'"')
+    .replace(/[_*]/g,' ')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function titleTokens(t){
+  const norm = normalizeTitle(t);
+  if(!norm) return [];
+  return norm.split(' ').filter(w => w && w.length > 1 && !STOPWORDS.has(w));
+}
+function jaccard(aTokens, bTokens){
+  const A = new Set(aTokens), B = new Set(bTokens);
+  if(A.size===0 || B.size===0) return 0;
+  let inter=0;
+  for(const x of A) if(B.has(x)) inter++;
+  return inter / (A.size + B.size - inter);
+}
+function levenshtein(a,b){
+  a = String(a||''); b = String(b||'');
+  const n=a.length, m=b.length;
+  if(!n) return m;
+  if(!m) return n;
+  const dp = new Array(m+1);
+  for(let j=0;j<=m;j++) dp[j]=j;
+  for(let i=1;i<=n;i++){
+    let prev = dp[0]; dp[0]=i;
+    for(let j=1;j<=m;j++){
+      const tmp = dp[j];
+      const cost = a[i-1]===b[j-1] ? 0 : 1;
+      dp[j] = Math.min(dp[j] + 1, dp[j-1] + 1, prev + cost);
+      prev = tmp;
+    }
   }
-
-  // Enhanced regex patterns that support 3+ authors
-  const apaFull = text.match(
-    /^([A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*(?:,\s+[A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*)*(?:,?\s+(?:&|and)\s+[A-Z][a-zA-Zé\u00C0-\u017F\-']+,\s+[A-Z][\w.]*)?)\s*\((\d{4})\)\.\s*(.+?)\.\s*(.+)/s
-  );
-  const apaLoose = !apaFull && /\(\d{4}\)\./.test(text) && /^[A-Z]/.test(text);
-  const mlaFull = text.match(/^([A-Z][a-z]+,\s+[A-Za-z\s]+?(?:,\s+[A-Z][a-z]+)?)\.\s+"(.+?)"\s+(.+?),\s+(\d{4})/);
-  const ieeeFull = text.match(/^\[?\d*\]?\s*([A-Z]\.\s*[A-Z][a-z]+(?:(?:\s+and\s+|,\s+)[A-Z]\.\s*[A-Z][a-z]+)*),\s+"(.+?)"/);
-  const vanFull = text.match(/^(\d+)\.\s+([A-Z][a-z]+\s+[A-Z]+(?:,\s+[A-Z][a-z]+\s+[A-Z]+)*)\.\s+(.+?)\.\s+(.+?)\.\s*\d{4}/);
-
-  const forceStyle = styleHint !== 'auto' ? styleHint : null;
-
-  if(forceStyle==='APA' || (!forceStyle && (apaFull||apaLoose))){
-    detectedStyle='APA';
-    if(apaFull){
-      authors=apaFull[1]; year=apaFull[2]; title=apaFull[3].trim();
-      // Better journal extraction - handles titles in quotes/italics
-      const journalPart = apaFull[4].replace(/,\s*\d+[\(\d\),\s\u2013\-–\.]+$/, '').split(',')[0].trim();
-      journal = journalPart.replace(/^[<em>]*|[<\/em>]*$/g, '').trim();
-      exps.push('APA full match: structure +30');
-      
-      // Enhanced multi-author detection
-      const authorCount = (authors.match(/&|and/gi) || []).length + 1;
-      const authorFormatMatch = /[A-Z][a-z]+,\s+[A-Z][\w.]*/.test(authors);
-      
-      if(authorCount >= 3){
-        exps.push('Multiple authors (' + authorCount + ') detected: +5');
-      }
-      
-      if(!authorFormatMatch){
-        errors.push('Author format should be: Surname, F. I.');
-        score-=8; exps.push('Author comma-initial format issue: −8');
-      } else {
-        exps.push('Author format correct: +5');
-      }
-      if(authors.includes(' and ') || (authors.includes('&') && !/,\s+&/.test(authors))){
-        errors.push('Multiple authors should be separated with commas before "&"');
-        score-=5; exps.push('Author separator format: −5');
-      }
-    } else if(apaLoose){
-      const yrM2 = text.match(/\((\d{4})\)/);
-      if(yrM2) year=yrM2[1];
-      const beforeYr = text.split(/\s*\(\d{4}\)/)[0].trim();
-      authors=beforeYr;
-      const afterYr = text.replace(/^.*?\(\d{4}\)\.\s*/,'').trim();
-      const parts = afterYr.split(/\.\s+/);
-      title = parts[0]||''; journal=(parts[1]||'').split(',')[0].trim();
-        errors.push('Author format incorrect - expected: Smith, J. A., & Jones, B.');
-      score-=18; exps.push('APA loose match, author format errors: −18');
-    } else {
-      errors.push('Does not match APA format');
-      score-=25; exps.push('APA format not matched: −25');
+  return dp[m];
+}
+function titleSimilarity(aTitle, bTitle){
+  const aN = normalizeTitle(aTitle), bN = normalizeTitle(bTitle);
+  if(!aN || !bN) return 0;
+  const tok = jaccard(titleTokens(aN), titleTokens(bN));
+  const dist = levenshtein(aN, bN);
+  const lev = 1 - (dist / Math.max(aN.length, bN.length, 1));
+  return clamp(0.65*tok + 0.35*lev, 0, 1);
+}
+function yearScore(inputYear, candidateYear){
+  if(!inputYear || !candidateYear) return 0;
+  const a = parseInt(inputYear,10), b = parseInt(candidateYear,10);
+  if(!a || !b) return 0;
+  const diff = Math.abs(a-b);
+  if(diff===0) return 1;
+  if(diff===1) return 0.55;
+  if(diff===2) return 0.25;
+  return 0;
+}
+function sourceSimilarity(inputSource, candidateSource){
+  const a = normalizeTitle(inputSource), b = normalizeTitle(candidateSource);
+  if(!a || !b) return 0;
+  return jaccard(titleTokens(a), titleTokens(b));
+}
+function extractLastNames(authorsText){
+  const s = String(authorsText||'')
+    .toLowerCase()
+    .replace(/\bet\s+al\.?/g,' ')
+    .replace(/[\u2018\u2019]/g,"'")
+    .replace(/[^a-z,\s;&-]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+  if(!s) return [];
+  const rawParts = s.split(/;|&|\band\b/).map(x=>x.trim()).filter(Boolean);
+  const lastNames = [];
+  for(const p0 of rawParts){
+    const p = p0.replace(/\s+/g,' ').trim();
+    if(!p) continue;
+    if(p.includes(',')){
+      const last = p.split(',')[0].trim();
+      if(last && last.length >= 2) lastNames.push(last);
+      continue;
     }
-  } else if(forceStyle==='MLA' || (!forceStyle && mlaFull)){
-    detectedStyle='MLA';
-    if(mlaFull){
-      authors=mlaFull[1]; title=mlaFull[2]; journal=mlaFull[3]; year=mlaFull[4];
-      exps.push('MLA structure matched: +30');
-      // Check for multiple authors in MLA format
-      const mlaAuthorCount = (authors.match(/, and |, /g) || []).length + 1;
-      if(mlaAuthorCount >= 3){
-        exps.push('Multiple authors (' + mlaAuthorCount + ') detected: +5');
-      }
-    } else {
-      errors.push('Does not match MLA format');
-      score-=20; exps.push('MLA format not matched: −20');
+    const toks = p.split(' ').filter(Boolean);
+    if(toks.length){
+      const last = toks[toks.length - 1].trim();
+      if(last && last.length >= 2) lastNames.push(last);
     }
-  } else if(forceStyle==='IEEE' || (!forceStyle && ieeeFull)){
-    detectedStyle='IEEE';
-    if(ieeeFull){
-      authors=ieeeFull[1]; title=ieeeFull[2];
-      const jM=text.match(/"[^"]+",\s+(.+?),\s+(?:vol\.|pp\.|20|19)/);
-      journal=jM?jM[1].trim():'';
-      exps.push('IEEE structure matched: +30');
-      // Check for multiple authors in IEEE format
-      const ieeeAuthorCount = (authors.match(/ and /g) || []).length + (authors.match(/,\s+/g) || []).length + 1;
-      if(ieeeAuthorCount >= 3){
-        exps.push('Multiple authors (' + ieeeAuthorCount + ') detected: +5');
-      }
-    } else {
-      errors.push('Does not match IEEE format');
-      score-=20; exps.push('IEEE format not matched: −20');
-    }
-  } else if(forceStyle==='Vancouver' || (!forceStyle && vanFull)){
-    detectedStyle='Vancouver';
-    if(vanFull){
-      authors=vanFull[2]; title=vanFull[3]; journal=vanFull[4];
-      exps.push('Vancouver structure matched: +30');
-    } else {
-      errors.push('Does not match Vancouver format');
-      score-=20; exps.push('Vancouver format not matched: −20');
-    }
-  } else if(forceStyle==='Chicago'){
-    detectedStyle='Chicago';
-    const chiM=text.match(/^([A-Z][a-z]+,\s+\w[\w\s]+?)\.\s+(.+?)\.\s+.+:\s+.+,\s+\d{4}/);
-    if(chiM){ authors=chiM[1]; title=chiM[2]; exps.push('Chicago structure matched: +30'); }
-    else { errors.push('Does not match Chicago format'); score-=20; exps.push('Chicago format not matched: −20'); }
-  } else {
-    detectedStyle = forceStyle || 'Unknown';
-    const firstDot = text.indexOf('.');
-    if(firstDot>0){ const cand=text.substring(0,firstDot).trim(); if(/[A-Z]/.test(cand)) authors=cand; }
-    const qTitle=text.match(/[""""](.+?)[""""]/); if(qTitle) title=qTitle[1];
-    if(!title){ const segs=text.split('.').map(s=>s.trim()).filter(Boolean); if(segs.length>1) title=segs[1]; }
-    const segs2=text.split('.').map(s=>s.trim()).filter(Boolean); if(segs2.length>=3) journal=segs2[2];
-      errors.push('Citation style could not be determined - applying generic parse');
-    score-=12; exps.push('Unknown style generic parse: −12');
   }
+  return lastNames.map(x=>x.replace(/[^a-z-]/g,'').trim()).filter(x=>x.length>=2);
+}
+function authorSimilarity(inputAuthors, candidateAuthors){
+  const aLast = extractLastNames(inputAuthors);
+  const bLast = extractLastNames(candidateAuthors);
+  if(!aLast.length || !bLast.length) return 0;
+  return jaccard(aLast, bLast);
+}
 
-  if(!authors){
-    errors.push('Author information is completely missing');
-    score-=20; exps.push('Authors missing: −20');
-  } else {
-    const isPlaceholder = /^(author|unknown|n\.?a\.?|anonymous)$/i.test(authors.trim());
-    const hasCapital = /[A-Z]/.test(authors);
-    const hasCommaOrInitial = /,|[A-Z]\./.test(authors);
-    if(isPlaceholder){ errors.push('Author field appears to be a placeholder'); score-=15; exps.push('Placeholder author: −15'); }
-    else if(!hasCapital){ errors.push('Author names should begin with capital letters'); score-=10; exps.push('Author capitalisation: −10'); }
-    else if(!hasCommaOrInitial){ errors.push('Author format may be incorrect - expected surname-first with initials'); score-=8; exps.push('Author format quality: -8'); }
-    else { exps.push('Authors look valid: +5'); }
+/* -------------- Style detection + parsing -------------- */
+function detectCitationStyle(line){
+  const t = String(line||'').trim();
+  if(!t) return 'Unknown';
+  if(/^\s*\[\d+\]\s+/.test(t)) return 'IEEE';
+  if(/^\s*\d+\.\s+/.test(t)) return 'Vancouver';
+  if(/\(\s*(19|20)\d{2}\s*\)\./.test(t)) return 'APA';
+  if(/["“][^"”]{8,}["”]/.test(t) && /\b(19|20)\d{2}\b/.test(t)) return 'MLA';
+  if(/:\s*[^,]{2,},\s*(19|20)\d{2}\b/.test(t)) return 'Chicago';
+  return 'Unknown';
+}
+function stripLeadingIndex(text){
+  return String(text||'')
+    .replace(/^\s*\[\d+\]\s*/,'')
+    .replace(/^\s*\(\d+\)\s*/,'')
+    .replace(/^\s*\d+\s*\.\s*/,'')
+    .trim();
+}
+function extractYearAny(text){
+  const years = [...String(text||'').matchAll(/\b(1[89]\d{2}|20[0-2]\d)\b/g)].map(m=>m[1]);
+  const paren = String(text||'').match(/\(\s*(1[89]\d{2}|20[0-2]\d)\s*\)/);
+  if(paren) return paren[1];
+  return years[0] || '';
+}
+function cleanTitle(t){
+  return String(t||'')
+    .replace(/^\s*["“”]+|["“”]+\s*$/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function stripTrailingJunk(s){
+  return String(s||'')
+    .replace(/\b(https?:\/\/\S+)\b.*$/i,'')
+    .replace(/\bdoi:\s*\S+\b.*$/i,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function extractTitleRobust(text){
+  const t = String(text||'').trim();
+  if(!t) return '';
+  const q = t.match(/["“]([^"”]{6,})["”]/);
+  if(q) return cleanTitle(q[1]);
+  const apa = t.match(/\(\s*(?:19|20)\d{2}\s*\)\.\s*([^\.]{6,})\./);
+  if(apa) return cleanTitle(apa[1]);
+  const ieee = t.match(/,\s*["“]([^"”]{6,})["”]\s*,/);
+  if(ieee) return cleanTitle(ieee[1]);
+  const parts = t.split('.').map(x=>x.trim()).filter(Boolean);
+  if(parts.length >= 2){
+    const candidate = parts[1];
+    if(titleTokens(candidate).length >= 3) return cleanTitle(candidate);
+  }
+  if(parts.length){
+    let best = '', bestScore=-1;
+    for(const seg of parts.slice(0,6)){
+      const tokCount = titleTokens(seg).length;
+      const len = seg.length;
+      const score = tokCount * 4 + Math.min(60, len);
+      if(score > bestScore){ bestScore = score; best = seg; }
+    }
+    return cleanTitle(best);
+  }
+  return '';
+}
+
+function parseCitationLine(raw, styleHint){
+  const text0 = String(raw||'').trim();
+  if(!text0) return null;
+
+  const text = stripLeadingIndex(text0);
+  const errors = [];
+  const exps = [];
+  const detected = styleHint && styleHint !== 'auto' ? styleHint : detectCitationStyle(text);
+
+  let authors='', title='', source='', year='';
+
+  if(detected==='APA'){
+    const m = text.match(/^(.+?)\s*\(\s*(\d{4})\s*\)\.\s*(.+?)\.\s*(.+)$/s);
+    if(m){ authors=m[1].trim(); year=m[2]; title=cleanTitle(m[3]); source=m[4].trim(); }
+    else errors.push('APA parse failed; falling back to generic parsing.');
+  }
+  if(!title && detected==='MLA'){
+    const m = text.match(/^(.+?)\.\s+["“](.+?)["”]\.?\s+(.+?)(?:,|\.)\s*(\d{4})\b/);
+    if(m){ authors=m[1].trim(); title=cleanTitle(m[2]); source=m[3].trim(); year=m[4]; }
+    else errors.push('MLA parse failed; falling back to generic parsing.');
+  }
+  if(!title && detected==='IEEE'){
+    const m = text.match(/^(.+?),\s*["“](.+?)["”]\s*,\s*(.+?)(?:,|\.)\s*(\d{4})\b/);
+    if(m){ authors=m[1].trim(); title=cleanTitle(m[2]); source=m[3].trim(); year=m[4]; }
+    else errors.push('IEEE parse failed; falling back to generic parsing.');
+  }
+  if(!title && detected==='Vancouver'){
+    const m = text.match(/^(.+?)\.\s+(.+?)\.\s+(.+?)\.\s*(\d{4})\b/);
+    if(m){ authors=m[1].trim(); title=cleanTitle(m[2]); source=m[3].trim(); year=m[4]; }
+    else errors.push('Vancouver parse failed; falling back to generic parsing.');
+  }
+  if(!title && detected==='Chicago'){
+    const m = text.match(/^(.+?)\.\s+(.+?)\.\s+(.+?)[,\.]\s*(\d{4})\b/);
+    if(m){ authors=m[1].trim(); title=cleanTitle(m[2]); source=m[3].trim(); year=m[4]; }
+    else errors.push('Chicago parse failed; falling back to generic parsing.');
   }
 
   if(!title){
-    errors.push('Paper title could not be extracted');
-    score-=15; exps.push('Title missing: −15');
-  } else if(title.split(' ').length < 2){
-    errors.push('Title is too short or incomplete: "'+title+'"');
-    score-=8; exps.push('Title too short: −8');
-  } else { exps.push('Title found: +5'); }
+    year = year || extractYearAny(text);
+    title = extractTitleRobust(text);
 
-  if(!journal){
-    errors.push('Journal/conference/book source is missing');
-    score-=12; exps.push('Source missing: −12');
-  } else if(/unknown/i.test(journal)){
-    errors.push('Journal appears to be a placeholder ("Unknown Journal")');
-    score-=12; exps.push('Placeholder source: −12');
-  } else { exps.push('Source found: +3'); }
-
-  if(year && parseInt(year)>CURRENT_YEAR){
-    score = Math.min(score, 25);
-    exps.push('Score capped at 25 due to future year');
+    if(title){
+      const idx = normalizeTitle(text).indexOf(normalizeTitle(title));
+      if(idx > 0){
+        const before = stripTrailingJunk(text.slice(0, idx));
+        authors = before.replace(/\(\s*\d{4}\s*\)/g,' ').split('.').shift().trim();
+      }
+    }
+    if(!authors){
+      const parts = text.replace(/^\s*\[?\d+\]?\s*/,'').split('.').map(s=>s.trim()).filter(Boolean);
+      authors = parts[0] || '';
+    }
+    if(title){
+      const idx2 = normalizeTitle(text).indexOf(normalizeTitle(title));
+      const after = idx2 >= 0 ? text.slice(idx2 + title.length) : '';
+      source = stripTrailingJunk(after)
+        .replace(/^[\s\.,;:]+/,'')
+        .split(/\b(19|20)\d{2}\b/)[0]
+        .split(',')[0]
+        .split('.')
+        .slice(0,3)
+        .join('.')
+        .trim();
+    }
   }
 
-  score = Math.max(5, Math.min(100, score));
-  
-  // Determine if citation is hallucinated (contains placeholder/fake data)
-  const isHallucinated = /\b(unknown|placeholder|fake|example|sample|test|demo|n\.?a\.?|n\.d\.)\b/i.test(
-    (authors + ' ' + title + ' ' + journal).toLowerCase()
-  ) && errors.length > 0;
-  
-  let status;
-  if(isHallucinated) {
-    status = 'Hallucinated';
-    score = Math.min(score, 20);
-  } else if(score>=75) {
-    status = 'Valid';
-  } else {
-    status = 'Partially Valid';
-  }
+  year = year || extractYearAny(text);
 
-  const a=authors||'Author, A.', t=title||'Unknown Title', j=journal||'Unknown Source', y=year||'n.d.';
-  const authorLast=a.split(',')[0].trim();
-  const authorFirst=(a.split(',')[1]||'').trim();
+  source = String(source||'')
+    .replace(/\s*,\s*\d+(\([^)]+\))?\s*,\s*\d+[-–]\d+\.?\s*$/,'')
+    .replace(/\s*(https?:\/\/\S+|doi:\s*\S+)\s*$/i,'')
+    .replace(/\s+/g,' ')
+    .trim();
+
+  title = cleanTitle(title);
+  authors = String(authors||'').replace(/\s+/g,' ').trim();
+
+  let doi = '';
+  const doiM = text.match(/\b(10\.\d{4,9}\/[^\s"<>]+)\b/i);
+  if(doiM) doi = doiM[1].replace(/[).,;]+$/,'');
+  let url = '';
+  const urlM = text.match(/\bhttps?:\/\/\S+\b/i);
+  if(urlM) url = urlM[0].replace(/[).,;]+$/,'');
+
+  if(!title || title.length < 6) errors.push('Title could not be confidently extracted.');
+  if(!year) errors.push('Year not found.');
+  else if(parseInt(year,10) > CURRENT_YEAR) errors.push(`Year ${year} is in the future.`);
+  if(!source) errors.push('Journal/source not found.');
+  if(!authors) errors.push('Authors not found.');
+
+  exps.push(`Detected style: ${detected}`);
+  exps.push(`Parsed fields: authors=${authors ? '✓' : '✗'}, title=${title ? '✓' : '✗'}, source=${source ? '✓' : '✗'}, year=${year ? '✓' : '✗'}`);
+
+  const a = authors || 'Author, A.';
+  const t = title || 'Unknown Title';
+  const s = source || 'Unknown Source';
+  const y = year || 'n.d.';
 
   return {
-    raw, authors:a, title:t, journal:j, year:y,
-    style:detectedStyle, score, status, errors, exps,
-    apa:  `${a} (${y}). ${t}. <em>${j}</em>.`,
-    mla:  `${authorLast}, ${authorFirst}. "${t}." <em>${j}</em>, ${y}.`,
-    ieee: `${a}, "${t}," <em>${j}</em>, ${y}.`
+    raw: text,
+    style: detected,
+    authors: a,
+    title: t,
+    journal: s,
+    year: y,
+    doi,
+    url,
+    errors,
+    exps,
+    status: 'Partially Valid',
+    confidence: 0,
+    bestMatch: null,
+    isRetracted: false,
+    retractionReason: null,
+    retractionSource: null,
+    apa: `${a} (${y}). ${t}. <em>${s}</em>.`,
+    mla: `${(a.split(',')[0]||a)}, ${(a.split(',')[1]||'').trim()}. "${t}." <em>${s}</em>, ${y}.`,
+    ieee:`${a}, "${t}," <em>${s}</em>, ${y}.`
   };
 }
 
-// ─── Mode 1: Paste ──────────────────────────────────────────────────────────
-function processPaste(){
-  const raw=document.getElementById('paste-input').value.trim();
-  if(!raw){showToast('Please paste at least one citation.');return;}
-  const style=document.getElementById('paste-style').value;
-  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
-  const el=document.getElementById('paste-loading');
-  el.classList.add('active');
-  document.getElementById('paste-results').innerHTML='';
-  setTimeout(()=>{
-    const cits=lines.map(l=>parseOneCitation(l,style)).filter(Boolean);
-    el.classList.remove('active');
-    renderResults(cits,'paste-results');
-  },450);
+/* -------------- Backend proxy lookup -------------- */
+async function backendLookup(provider, title){
+  const url = `${BACKEND_BASE}/api/lookup/${provider}?title=${encodeURIComponent(title||'')}`;
+  const resp = await fetch(url, { method:'GET' });
+  const data = await resp.json().catch(()=> ({}));
+  if(!resp.ok){
+    const msg = data?.error?.message || data?.error || `${provider} lookup failed`;
+    throw new Error(msg);
+  }
+  return data;
 }
 
+function formatAuthorsFromArray(arr){
+  if(!Array.isArray(arr) || !arr.length) return '';
+  const names = arr.map(a=>{
+    if(!a) return '';
+    if(typeof a === 'string') return a;
+    const fam = a.family || a.last || '';
+    const giv = a.given || a.first || '';
+    if(fam && giv) return `${fam}, ${giv}`;
+    return fam || giv || '';
+  }).filter(Boolean);
+  return names.join('; ');
+}
+
+function normalizeCandidate(provider, c){
+  const title = c?.title || '';
+  const year = c?.year ? String(c.year) : '';
+  const source = c?.source || c?.journal || c?.venue || c?.container || '';
+  const authors = (typeof c?.authors === 'string') ? c.authors : formatAuthorsFromArray(c?.authors);
+  const link = c?.url || c?.link || '';
+  const doi = c?.doi || '';
+  const isRetracted = c?.isRetracted || false;
+  const retractionReason = c?.retractionReason || '';
+  return { provider, title, year, source, authors, link, doi, isRetracted, retractionReason, raw: c };
+}
+
+function candidateAggregateScore(input, cand){
+  const tSim = titleSimilarity(input.title, cand.title);
+  const ySim = yearScore(input.year, cand.year);
+  const sSim = sourceSimilarity(input.journal, cand.source);
+  const aSim = authorSimilarity(input.authors, cand.authors);
+
+  const score = clamp(0.78*tSim + 0.12*ySim + 0.08*sSim + 0.02*aSim, 0, 1);
+  return { score, tSim, ySim, sSim, aSim };
+}
+
+function statusFromFieldScores(input, cand, fieldScores){
+  const { score, tSim, ySim, sSim } = fieldScores;
+  if(tSim < 0.58) return { status:'Hallucinated', confidence: score };
+
+  const candHasYear = !!(cand?.year && String(cand.year).trim());
+  const candHasSource = !!(cand?.source && String(cand.source).trim());
+  const yearOk = !candHasYear ? true : (ySim >= 0.55);
+  const sourceOk = !candHasSource ? true : (sSim >= 0.40);
+
+  if(tSim >= 0.82 && yearOk && sourceOk) return { status:'Valid', confidence: score };
+  if(tSim >= 0.70 && score >= 0.58) return { status:'Partially Valid', confidence: score };
+  return { status:'Hallucinated', confidence: score };
+}
+
+function explainMatch(input, best, fieldScores, apiErrors){
+  const lines = [];
+  lines.push(`Best source: ${best.provider}`);
+  lines.push(`Title similarity: ${(fieldScores.tSim*100).toFixed(1)}%`);
+  lines.push(`Year match: ${(fieldScores.ySim*100).toFixed(1)}%`);
+  lines.push(`Source similarity: ${(fieldScores.sSim*100).toFixed(1)}%`);
+  lines.push(`Author similarity: ${(fieldScores.aSim*100).toFixed(1)}%`);
+  if(best.link) lines.push(`Link: ${best.link}`);
+  if(best.doi) lines.push(`DOI: ${best.doi}`);
+  if(apiErrors.length){
+    lines.push('API notes:');
+    for(const e of apiErrors.slice(0,6)) lines.push(`- ${e}`);
+  }
+  return lines;
+}
+
+async function verifyCitationAgainstAPIs(parsed){
+  const apiErrors = [];
+  const providers = ['crossref','openalex','semanticscholar','arxiv'];
+
+  if(!parsed.title || parsed.title === 'Unknown Title' || parsed.title.length < 6){
+    parsed.status = 'Hallucinated';
+    parsed.confidence = 0.12;
+    parsed.errors.push('Cannot verify without a usable title.');
+    parsed.exps.push('Verification skipped (missing/weak title).');
+    return parsed;
+  }
+
+  const allCandidates = [];
+
+  for(const p of providers){
+    try{
+      const data = await backendLookup(p, parsed.title);
+      const items = Array.isArray(data?.items) ? data.items : [];
+      for(const it of items){
+        allCandidates.push(normalizeCandidate(p, it));
+      }
+    } catch(e){
+      apiErrors.push(`${p}: ${e.message}`);
+    }
+    //await sleep(120);
+  }
+
+  if(!allCandidates.length){
+    parsed.status = 'Hallucinated';
+    parsed.confidence = 0.10;
+    parsed.errors.push('No match returned from Crossref/OpenAlex/Semantic Scholar/arXiv.');
+    parsed.exps.push(...apiErrors.map(x=>`API error: ${x}`));
+    return parsed;
+  }
+
+  // 🔥 INSTANT RETRACTION DETECTION
+  const retractedCand = allCandidates.find(c => c.isRetracted);
+  if (retractedCand) {
+    parsed.status = "Retracted";
+    parsed.confidence = 0.2;
+    parsed.isRetracted = true;
+    parsed.retractionReason = retractedCand.retractionReason || "Marked as retracted by indexer.";
+    parsed.retractionSource = retractedCand.link || "";
+    parsed.exps.push("🚫 This paper is marked as RETRACTED by academic sources.");
+  }
+
+  // 3️⃣ BEST MATCH SELECTION
+  let best = null;
+  let bestScores = null;
+
+  for(const cand of allCandidates){
+    const s = candidateAggregateScore(parsed, cand);
+    if(!best || s.score > bestScores.score){
+      best = cand;
+      bestScores = s;
+    }
+  }
+
+  if (!parsed.isRetracted) {
+    const { status, confidence } = statusFromFieldScores(parsed, best, bestScores);
+    parsed.status = status;
+    parsed.confidence = confidence;
+  }
+
+  const link = best.link || (best.doi ? `https://doi.org/${best.doi}` : '');
+  if(link) parsed.url = link;
+  if(best.doi) parsed.doi = best.doi;
+
+  parsed.bestMatch = {
+    provider: best.provider,
+    title: best.title,
+    year: best.year,
+    source: best.source,
+    authors: best.authors,
+    link: link
+  };
+
+  const confPct = Math.round(parsed.confidence * 100);
+  parsed.exps.push(`Best match confidence: ${confPct}%`);
+  parsed.exps.push(...explainMatch(parsed, best, bestScores, apiErrors));
+
+  if(parsed.status === 'Partially Valid')
+    parsed.errors.push('Title matched, but one or more fields (year/source/authors) is weak or missing.');
+  if(parsed.status === 'Hallucinated' && !parsed.isRetracted)
+    parsed.errors.push('No sufficiently similar title match across public scholarly indexes.');
+
+  if(best?.title){
+    const a = parsed.authors || 'Author, A.';
+    const t = best.title;
+    const s = best.source || parsed.journal || 'Unknown Source';
+    const y = best.year || parsed.year || 'n.d.';
+    parsed.apa = `${a} (${y}). ${t}. <em>${s}</em>.`;
+    parsed.mla = `${(a.split(',')[0]||a)}, ${(a.split(',')[1]||'').trim()}. "${t}." <em>${s}</em>, ${y}.`;
+    parsed.ieee= `${a}, "${t}," <em>${s}</em>, ${y}.`;
+  }
+
+  return parsed;
+}
+
+/* ---------------- GLOBAL STATE ---------------- */
+let LAST_PASTE_RESULTS = [];
+
+/* ---------------- Corrector ---------------- */
+async function correctCitation(index, containerId){
+  const c = LAST_PASTE_RESULTS?.[index];
+  if(!c){ showToast("Run Analyze Citations first."); return; }
+
+  const hostId = `correct-area-${containerId}-${index}`;
+  const host = document.getElementById(hostId);
+  if(!host){ showToast("Correction UI placeholder missing."); return; }
+
+  host.innerHTML = `
+    <div class="correct-box">
+      <div class="loading active" style="display:block;padding:12px">
+        <div class="spinner"></div>
+        <div class="loading-text">Finding correction candidates…</div>
+      </div>
+    </div>
+  `;
+
+  try{
+    const citationText = (c.raw && String(c.raw).trim()) || String(c.apa || "").replace(/<[^>]+>/g, "").trim() || "";
+    const resp = await fetch(`${BACKEND_BASE}/api/correct-citation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ citation: citationText, max: 5 })
+    });
+
+    const data = await resp.json().catch(()=> ({}));
+    if(!resp.ok) throw new Error(data?.error?.message || `Correction failed`);
+
+    const candidates = Array.isArray(data?.candidates) ? data.candidates : [];
+    c._candidates = candidates;
+
+    if(!candidates.length){
+      host.innerHTML = `<div class="correct-box"><div class="cand"><div class="cand-apa">No reliable match found.</div></div></div>`;
+      return;
+    }
+
+    host.innerHTML = `
+      <div class="correct-box">
+        <div class="correct-title"><span>Suggested corrections</span></div>
+        ${candidates.map((cand, i) => {
+          const scorePct = Math.round((Number(cand.score)||0)*100);
+          const openUrl = cand.url || (cand.doi ? `https://doi.org/${cand.doi}` : "");
+          const meta = [cand.provider, cand.year, cand.venue].filter(Boolean).join(" · ");
+          return `
+            <div class="cand">
+              <div style="font-weight:800;color:var(--text)">${escapeHtml(cand.title || "Untitled")}</div>
+              <div class="cand-meta">${escapeHtml(meta)}</div>
+              <div class="cand-meta">${escapeHtml(cand.authors || "")}</div>
+              <div class="cand-apa">${escapeHtml(cand.apa || "")}</div>
+              <div class="cand-actions">
+                <button class="btn btn-primary btn-sm" onclick="applyCorrection(${index}, ${i}, '${containerId}')">Use this</button>
+                ${openUrl ? `<a class="badge badge-api" href="${escapeHtml(openUrl)}" target="_blank">Open</a>` : ""}
+                <span class="badge badge-valid">Match ${scorePct}%</span>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  } catch(err){
+    host.innerHTML = `<div class="correct-box"><div class="cand"><div class="cand-apa">Error: ${escapeHtml(String(err.message || err))}</div></div></div>`;
+  }
+}
+
+function applyCorrection(index, candidateIndex, containerId) {
+  const c = LAST_PASTE_RESULTS[index];
+  const cand = c._candidates[candidateIndex];
+  if (!cand) { alert("Candidate not found!"); return; }
+
+  c.title = cand.title || c.title;
+  c.venue = cand.venue || c.venue;
+  c.year = cand.year || c.year;
+  c.authors = cand.authors || c.authors;
+  c.doi = cand.doi;
+  c.url = cand.url;
+
+  c.status = "Corrected";
+  renderResults(LAST_PASTE_RESULTS, containerId);
+  showToast("Citation corrected.");
+}
+
+/* ---------------- Mode 1: Paste ---------------- */
+async function processPaste(){
+  const raw=document.getElementById('paste-input').value.trim();
+  if(!raw){ showToast('Please paste at least one citation.'); return; }
+  const style=document.getElementById('paste-style').value || 'auto';
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+
+  const el=document.getElementById('paste-loading');
+  el.classList.add('active');
+  el.querySelector('.loading-text').textContent='Analyzing citations…';
+  document.getElementById('paste-results').innerHTML='';
+
+  const parsed = lines.map(l => parseCitationLine(l, style)).filter(Boolean);
+  const out = [];
+  const concurrency = 5;
+  let idx = 0;
+
+  async function worker(){
+    while(idx < parsed.length){
+      const i = idx++;
+      try{ out[i] = await verifyCitationAgainstAPIs(parsed[i]); }
+      catch(e){
+        parsed[i].status = 'Hallucinated';
+        parsed[i].confidence = 0.1;
+        parsed[i].errors.push(`Verification failed: ${e.message}`);
+        out[i] = parsed[i];
+      }
+    }
+  }
+  await Promise.all(Array.from({length: Math.min(concurrency, parsed.length)}, ()=>worker()));
+
+  el.classList.remove('active');
+  LAST_PASTE_RESULTS = out.filter(Boolean);
+  renderResults(LAST_PASTE_RESULTS,'paste-results');
+  LAST_PASTE_RESULTS.forEach(c => {
+  c.score = Math.round((c.confidence || 0) * 100);
+});
+}
 function clearPaste(){
   document.getElementById('paste-input').value='';
   document.getElementById('paste-results').innerHTML='';
+  LAST_PASTE_RESULTS = [];
 }
 
-// ─── Mode 2: PDF Upload ─────────────────────────────────────────────────────
+/* ---------------- Mode 2: PDF Upload ---------------- */
 let pdfFile=null;
-
 function handlePDFUpload(e){
   const f = e?.target?.files?.[0];
   if(!f) return;
-
   const ok = f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
-  if(!ok){
-    showToast('Please choose a valid PDF file.');
-    return;
-  }
-
+  if(!ok){ showToast('Please choose a valid PDF file.'); return; }
   pdfFile=f;
   document.getElementById('file-info-area').innerHTML=
     '<div class="file-info">📄 <span class="fname">'+escapeHtml(f.name)+'</span><span class="fsize">'+
     (f.size/1024).toFixed(1)+' KB</span></div>';
-
   document.getElementById('pdf-analyze-btn').style.display='inline-flex';
   document.getElementById('pdf-debug-note').textContent = 'PDF selected. Click “Extract & Analyze”.';
 }
-
 function dragOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('dragover')}
 function dragLeave(){document.getElementById('drop-zone').classList.remove('dragover')}
-
 function dropFile(e){
   e.preventDefault(); dragLeave();
-
   const f = e.dataTransfer?.files?.[0];
   if(!f){ showToast('No file dropped.'); return; }
-
   const ok = f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
-  if(!ok){
-    showToast('Please drop a valid PDF file.');
-    return;
-  }
-
+  if(!ok){ showToast('Please drop a valid PDF file.'); return; }
   const inp=document.getElementById('pdf-input');
-  const dt=new DataTransfer();
-  dt.items.add(f);
-  inp.files=dt.files;
-
+  const dt=new DataTransfer(); dt.items.add(f); inp.files=dt.files;
   handlePDFUpload({ target: inp });
 }
 
 async function analyzePDF(){
-  if(!pdfFile){showToast('Please upload a PDF first.');return;}
-
+  if(!pdfFile){ showToast('Please upload a PDF first.'); return; }
   const loadEl=document.getElementById('pdf-loading');
   loadEl.classList.add('active');
+  loadEl.querySelector('.loading-text').textContent='Checking backend…';
+  
   document.getElementById('pdf-results').innerHTML='';
-  document.getElementById('pdf-debug-note').textContent = 'Checking backend…';
+  document.getElementById('pdf-debug-note').textContent = '';
 
-  try {
-    const healthResp = await fetch(PDF_API_BASE + '/health', { method: 'GET' });
-    if(!healthResp.ok){
-      throw new Error('PDF backend not reachable (health check failed). Start server.js on port 3000.');
-    }
+  try{
+    const health = await fetch(`${BACKEND_BASE}/health`, { method:'GET' });
+    if(!health.ok) throw new Error('Backend not reachable. Start server on http://localhost:3000');
 
-    document.getElementById('pdf-debug-note').textContent = 'Reading PDF…';
-
+    loadEl.querySelector('.loading-text').textContent='Reading PDF…';
     const base64Data=await new Promise((res,rej)=>{
       const r=new FileReader();
       r.onload=()=>res(String(r.result).split(',')[1]);
@@ -582,247 +1810,124 @@ async function analyzePDF(){
       r.readAsDataURL(pdfFile);
     });
 
-    document.getElementById('pdf-debug-note').textContent = 'Sending to AI backend for extraction…';
-
-    const resp=await fetch(PDF_API_BASE + '/api/analyze-pdf',{
+    loadEl.querySelector('.loading-text').textContent='Extracting citations from PDF…';
+    const resp=await fetch(`${BACKEND_BASE}/api/analyze-pdf`,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ base64Data })
     });
-
     const data=await resp.json().catch(()=> ({}));
-    if(!resp.ok){
-      const msg = data?.error?.message || data?.error?.type || 'PDF API error';
-      throw new Error(msg);
-    }
-
-    loadEl.classList.remove('active');
+    if(!resp.ok) throw new Error(data?.error?.message || 'PDF API error');
 
     const extracted = Array.isArray(data?.citations) ? data.citations : [];
-
-    if(!Array.isArray(extracted) || extracted.length === 0){
-      document.getElementById('pdf-debug-note').textContent = '';
-      document.getElementById('pdf-results').innerHTML=
-        '<div class="empty-state"><span class="icon">📭</span><p>No citations extracted. If this PDF is a scanned image, OCR is needed. Try a text-based PDF with a References section.</p></div>';
+    if(!extracted.length){
+      loadEl.classList.remove('active');
+      document.getElementById('pdf-results').innerHTML= '<div class="empty-state"><span class="icon">📭</span><p>No citations extracted. Scan-only PDFs need OCR.</p></div>';
       return;
     }
 
-    const cits = extracted.map(item=>{
-      const rawStr = item?.raw
-        || ((item?.authors||'')+' ('+(item?.year||'n.d.')+'). '+(item?.title||'')+'. '+(item?.journal||'')+'.');
+    loadEl.querySelector('.loading-text').textContent='Verifying extracted citations…';
+    const parsed = extracted.map(item => parseCitationLine(String(item || '').trim(), 'auto')).filter(Boolean);
 
-      // Use APA as default for PDF extraction, not auto-detect
-      const parsed = parseOneCitation(rawStr,'APA') || {
-        raw: rawStr, authors:'', title:'', journal:'', year:'',
-        style:'APA', score:35, status:'Partially Valid', errors:[], exps:[]
-      };
+    const out = [];
+    const concurrency = 5;
+    let idx = 0;
+    async function worker(){
+      while(idx < parsed.length){
+        const i = idx++;
+        try{ out[i] = await verifyCitationAgainstAPIs(parsed[i]); }
+        catch(e){
+          parsed[i].status='Hallucinated';
+          parsed[i].confidence=0.1;
+          parsed[i].errors.push(`Verification failed: ${e.message}`);
+          out[i]=parsed[i];
+        }
+      }
+    }
+    await Promise.all(Array.from({length: Math.min(concurrency, parsed.length)}, ()=>worker()));
 
-      if(item?.authors) parsed.authors=item.authors;
-      if(item?.title)   parsed.title=item.title;
-      if(item?.journal) parsed.journal=item.journal;
-      if(item?.year)    parsed.year=String(item.year);
-
-      const a=parsed.authors||'N/A', t=parsed.title||'N/A', j=parsed.journal||'N/A', y=parsed.year||'N/A';
-      parsed.apa=`${a} (${y}). ${t}. <em>${j}</em>.`;
-      parsed.mla=`${(a.split(',')[0]||a)}, ${(a.split(',')[1]||'').trim()}. "${t}." <em>${j}</em>, ${y}.`;
-      parsed.ieee=`${a}, "${t}," <em>${j}</em>, ${y}.`;
-
-      return parsed;
+    loadEl.classList.remove('active');
+    document.getElementById('pdf-debug-note').textContent = `Total citations extracted: ${out.length}`;
+    LAST_PASTE_RESULTS = out; // Share with corrector
+    out.forEach(c => {
+      c.score = Math.round((c.confidence || 0) * 100);
     });
-
-    document.getElementById('pdf-debug-note').textContent =
-      `Total citations extracted: ${cits.length}`;
-
-    renderResults(cits,'pdf-results');
+    renderResults(out,'pdf-results');
 
   } catch(err){
     loadEl.classList.remove('active');
-    document.getElementById('pdf-debug-note').textContent = '';
-    document.getElementById('pdf-results').innerHTML=
-      '<div class="empty-state"><span class="icon">&#9888;</span><p>Error: '+escapeHtml(String(err.message||err))+'</p></div>';
+    document.getElementById('pdf-results').innerHTML= '<div class="empty-state"><span class="icon">&#9888;</span><p>Error: '+escapeHtml(String(err.message||err))+'</p></div>';
   }
 }
 
-function escapeHtml(s){
-  return String(s)
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'",'&#039;');
-}
-
-// ─── Mode 3: Keyword Search (Crossref) ───────────────────────────────────────
+/* ---------------- Mode 3: Keyword Search ---------------- */
 async function processKeyword(){
   const kw = document.getElementById('kw-input').value.trim();
   if(!kw){ showToast('Please enter at least one keyword.'); return; }
-
   const yr = document.getElementById('kw-year').value;
   const maxR = parseInt(document.getElementById('kw-max').value,10) || 8;
-
   const quoted=[...kw.matchAll(/"([^"]+)"/g)].map(m=>m[1]);
   const plain=kw.replace(/"[^"]+"/g,'').split(',').map(s=>s.trim()).filter(Boolean);
   const chips=[...quoted,...plain];
-  document.getElementById('kw-chips-area').innerHTML = chips.length
-    ? '<div class="kw-chips">'+chips.map(c=>'<span class="chip">'+escapeHtml(c)+'</span>').join('')+'</div>' : '';
+  document.getElementById('kw-chips-area').innerHTML = chips.length ? '<div class="kw-chips">'+chips.map(c=>'<span class="chip">'+escapeHtml(c)+'</span>').join('')+'</div>' : '';
 
   const loadEl=document.getElementById('kw-loading');
   loadEl.classList.add('active');
+  loadEl.querySelector('.loading-text').textContent = 'Searching…';
   document.getElementById('kw-results').innerHTML='';
 
-  try {
-    let allPapers = [];
-    
-    // Crossref API
-    try {
-      let filter = [];
-      if(yr !== 'all'){
-        const from = `${yr}-01-01`;
-        const until = `${parseInt(yr,10)+4}-12-31`;
-        filter.push(`from-pub-date:${from}`);
-        filter.push(`until-pub-date:${until}`);
-      }
+  try{
+    const url = `${BACKEND_BASE}/api/keyword-search?query=${encodeURIComponent(kw)}&max=${encodeURIComponent(String(maxR))}&year=${encodeURIComponent(yr)}`;
+    const resp = await fetch(url);
+    const data = await resp.json().catch(()=> ({}));
+    if(!resp.ok) throw new Error(data?.error?.message || 'Keyword search failed');
 
-      const url =
-        'https://api.crossref.org/works' +
-        `?query=${encodeURIComponent(kw)}` +
-        `&rows=${encodeURIComponent(Math.ceil(maxR/2))}` +
-        `&select=title,author,issued,container-title,DOI,type,URL` +
-        (filter.length ? `&filter=${encodeURIComponent(filter.join(','))}` : '');
-
-      document.getElementById('kw-loading').querySelector('.loading-text').textContent = 'Searching Crossref...';
-      const resp = await fetch(url);
-      if(resp.ok) {
-        const data = await resp.json();
-        const items = data?.message?.items || [];
-        allPapers = [...allPapers, ...items.slice(0, Math.ceil(maxR/2))];
-      }
-    } catch(e) {
-      console.log('Crossref search note:', e.message);
-    }
-
-    // OpenAlex API (fallback/additional results)
-    try {
-      document.getElementById('kw-loading').querySelector('.loading-text').textContent = 'Searching OpenAlex...';
-      const openalex = await fetch(
-        `https://api.openalex.org/works?search=${encodeURIComponent(kw)}&per_page=${Math.ceil(maxR/2)}&sort=cited_by_count:desc`
-      );
-      if(openalex.ok) {
-        const data = await openalex.json();
-        const items = (data?.results || []).map(w => ({
-          title: w.title ? [w.title] : [],
-          author: (w.authorships || []).map(a => ({ family: a.author?.last_name, given: a.author?.first_name })),
-          issued: { 'date-parts': [[w.publication_year || new Date().getFullYear()]] },
-          'container-title': [w['host_venue']?.display_name || 'Unknown'],
-          DOI: w.doi ? w.doi.replace('https://doi.org/', '') : '',
-          URL: w.landing_page_url || w.doi || ''
-        }));
-        allPapers = [...allPapers, ...items.slice(0, Math.ceil(maxR/2))];
-      }
-    } catch(e) {
-      console.log('OpenAlex search note:', e.message);
-    }
-
-    const items = allPapers.slice(0, maxR);
-    if(!items.length){
+    const papers = Array.isArray(data?.items) ? data.items : [];
+    if(!papers.length){
       loadEl.classList.remove('active');
-      document.getElementById('kw-results').innerHTML =
-        '<div class="empty-state"><span class="icon">🔍</span><p>No results found. Try broader keywords.</p></div>';
+      document.getElementById('kw-results').innerHTML = '<div class="empty-state"><span class="icon">🔍</span><p>No results found. Try broader keywords.</p></div>';
       return;
     }
 
-    const papers = items.map((it) => {
-      const year = it?.issued?.['date-parts']?.[0]?.[0] ? String(it.issued['date-parts'][0][0]) : 'n.d.';
-      const title = (it.title && it.title[0]) ? it.title[0] : 'Untitled';
-      const journal = (it['container-title'] && it['container-title'][0]) ? it['container-title'][0] : (it.type || 'Unknown source');
-
-      const doi = (it.DOI || '').toString();
-      const landingUrl = (it.URL || (doi ? `https://doi.org/${doi}` : '')).toString();
-
-      const authorsArr = Array.isArray(it.author) ? it.author : [];
-      const authors = authorsArr.slice(0, 6).map(a => {
-        const family = a.family || '';
-        const given = a.given || '';
-        const initials = given.split(/\s+/).filter(Boolean).map(w => w[0] ? w[0].toUpperCase()+'.' : '').join(' ');
-        return (family && initials) ? `${family}, ${initials}` : (family || given || '');
-      }).filter(Boolean);
-
-      let authorStr = 'Unknown, A.';
-      if(authors.length === 1) authorStr = authors[0];
-      else if(authors.length === 2) authorStr = `${authors[0]}, & ${authors[1]}`;
-      else if(authors.length > 2) authorStr = `${authors.slice(0, -1).join(', ')}, & ${authors.at(-1)}`;
-
+    const cits = papers.map((p)=>{
+      const a=(p.authors||'Author, A.').toString();
+      const t=(p.title||'Unknown Title').toString();
+      const j=(p.source||'Unknown Source').toString();
+      const y=(p.year||'n.d.').toString();
+      const rel = clamp(Number(p.relevance||80)/100, 0, 1);
+      const score = Math.round(rel*100);
+      const url = p.url || (p.doi ? `https://doi.org/${p.doi}` : '');
+      const authorLast=a.split(',')[0].trim();
+      const authorFirst=(a.split(',')[1]||'').trim();
       return {
-        title,
-        authors: authorStr,
-        year,
-        journal,
-        doi,
-        url: landingUrl,
-        relevance: 80,
-        abstract: ''
+        raw:'', authors:a,title:t,journal:j,year:y,style:'APA', doi:(p.doi||''), url,
+        confidence: rel, score, status:'Valid', errors:[], exps:['Search relevance: '+score+'%'],
+        apa:  `${a} (${y}). ${t}. <em>${j}</em>.`,
+        mla:  `${authorLast}, ${authorFirst}. "${t}." <em>${j}</em>, ${y}.`,
+        ieee: `${a}, "${t}," <em>${j}</em>, ${y}.`
       };
     });
 
     loadEl.classList.remove('active');
-    renderKeywordResults(papers);
+    renderKeywordResults(cits);
 
-  } catch (err){
+  } catch(err){
     loadEl.classList.remove('active');
-    document.getElementById('kw-results').innerHTML =
-      '<div class="empty-state"><span class="icon">&#9888;</span><p>Error: '+escapeHtml(String(err.message || err))+'</p></div>';
+    document.getElementById('kw-results').innerHTML = '<div class="empty-state"><span class="icon">&#9888;</span><p>Error: '+escapeHtml(String(err.message || err))+'</p></div>';
   }
 }
 
-// ─── Render: keyword ────────────────────────────────────────────────────────
-function renderKeywordResults(papers){
-  if(!papers||!papers.length){
-    document.getElementById('kw-results').innerHTML='<div class="empty-state"><span class="icon">🔍</span><p>No results.</p></div>';
-    return;
-  }
-
-  const cits=papers.map((p)=>{
-    const a=(p.authors||'Author, A.').toString();
-    const t=(p.title||'Unknown Title').toString();
-    const j=(p.journal||'Unknown Source').toString();
-    const y=(p.year||'n.d.').toString();
-    const rel=Math.min(100,Math.max(0,parseInt(p.relevance,10)||80));
-    const authorLast=a.split(',')[0].trim();
-    const authorFirst=(a.split(',')[1]||'').trim();
-    return {
-      raw:'',authors:a,title:t,journal:j,year:y,style:'APA',
-      doi:(p.doi||''), url:(p.url||''),
-      score:rel,status:'Valid',errors:[],exps:['Relevance score: '+rel+'%'],
-      abstract:(p.abstract||''),relevance:rel,
-      apa:  `${a} (${y}). ${t}. <em>${j}</em>.`,
-      mla:  `${authorLast}, ${authorFirst}. "${t}." <em>${j}</em>, ${y}.`,
-      ieee: `${a}, "${t}," <em>${j}</em>, ${y}.`
-    };
-  });
-
+function renderKeywordResults(cits){
   window._kw_cits=cits;
   const uid=Date.now()%100000;
   const bc2='kw_bc_'+uid, pc2='kw_pc_'+(uid+1);
-  const avgRel=Math.round(cits.reduce((a,c)=>a+c.score,0)/cits.length);
+  const avgRel=Math.round(cits.reduce((a,c)=>a+(c.score||0),0)/cits.length);
 
   const listHtml=cits.map((c,i)=>{
-    const doiLine = c.doi
-      ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:0.35rem;font-family:'DM Mono',monospace">
-           DOI: <a href="https://doi.org/${c.doi}" target="_blank" rel="noopener noreferrer"
-                  style="color:var(--accent2);text-decoration:none">https://doi.org/${c.doi}</a>
-         </div>`
-      : '';
-    const urlLine = (!c.doi && c.url)
-      ? `<div style="font-size:0.75rem;color:var(--text3);margin-top:0.35rem;font-family:'DM Mono',monospace">
-           Link: <a href="${c.url}" target="_blank" rel="noopener noreferrer"
-                    style="color:var(--accent2);text-decoration:none">${c.url}</a>
-         </div>`
-      : '';
-
-    const abs = (c.abstract
-      ? `<div style="font-size:0.77rem;color:var(--text2);margin:0.4rem 0 0.2rem;font-style:italic">${escapeHtml(c.abstract)}</div>`
-      : '') + doiLine + urlLine;
-
+    const linkLine = c.url
+      ? `<div style="font-size:1rem;color:var(--text3);margin-top:0.35rem;font-family:'Poppins',monospace">
+           Link: <a class="link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.url)}</a>
+         </div>` : '';
     const fmts='<div class="formats-box"><div class="formats-title">Generated Citations <button class="copy-btn" onclick="copyKw('+i+')">Copy All</button></div>'+
       '<div class="format-item"><span class="format-label">APA</span><span class="format-text">'+c.apa+'</span></div>'+
       '<div class="format-item"><span class="format-label">MLA</span><span class="format-text">'+c.mla+'</span></div>'+
@@ -830,38 +1935,87 @@ function renderKeywordResults(papers){
 
     return '<div class="citation-card">'+
       '<div class="card-top"><span class="card-title">'+escapeHtml(c.title)+'</span>'+
-      '<span class="badge" style="background:rgba(232,168,56,0.15);color:var(--accent);white-space:nowrap">&#9733; '+c.relevance+'%</span></div>'+
+      '<span class="badge badge-valid">✓ Real</span></div>'+
       '<div class="card-meta">'+escapeHtml(c.year)+' &middot; '+escapeHtml(c.journal)+'</div>'+
       '<div class="card-fields"><div><div class="cf-label">Authors</div><div class="cf-val">'+escapeHtml(c.authors)+'</div></div>'+
       '<div><div class="cf-label">Source</div><div class="cf-val">'+escapeHtml(c.journal)+'</div></div></div>'+
-      abs+
+      linkLine+
       '<div class="score-row"><div class="score-bar"><div class="score-fill" style="width:'+c.score+'%;background:#e8a838"></div></div>'+
       '<span class="score-num" style="color:#e8a838">'+c.score+'%</span>'+
-      '<span style="font-size:0.72rem;color:var(--text3);font-family:\'DM Mono\',monospace">relevance</span></div>'+
+      '<span style="font-size:0.72rem;color:var(--text3);font-family:\'Poppins\',monospace">relevance</span></div>'+
       fmts+'</div>';
   }).join('');
 
-  const tableHtml='<div class="table-wrap"><table><thead><tr>'+
-    '<th>#</th><th>Title</th><th>Authors</th><th>Source</th><th>Year</th><th>DOI</th><th>Relevance</th>'+
-    '</tr></thead><tbody>'+
-    cits.map((c,i)=>'<tr>'+
-      '<td style="font-family:\'DM Mono\',monospace;color:var(--text3)">'+(i+1)+'</td>'+
-      '<td style="max-width:180px">'+escapeHtml(c.title)+'</td>'+
-      '<td style="max-width:130px;font-size:0.72rem">'+escapeHtml(c.authors)+'</td>'+
-      '<td style="max-width:130px;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(c.journal)+'</td>'+
-      '<td style="font-family:\'DM Mono\',monospace">'+escapeHtml(c.year)+'</td>'+
-      '<td style="max-width:170px;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
-        (c.doi ? ('<a href="https://doi.org/'+encodeURIComponent(c.doi)+'" target="_blank" rel="noopener noreferrer" style="color:var(--accent2);text-decoration:none">'+escapeHtml(c.doi)+'</a>') : 'N/A')+
-      '</td>'+
-      '<td><div style="display:flex;align-items:center;gap:5px"><div class="score-bar"><div class="score-fill" style="width:'+c.score+'%;background:#e8a838"></div></div>'+
-      '<span style="font-size:0.75rem;color:#e8a838;font-family:\'DM Mono\',monospace">'+c.score+'%</span></div></td>'+
-      '</tr>').join('')+
-    '</tbody></table></div>';
+  const tableHtml =
+  '<div class="table-wrap">' +
+    '<table class="citation-table">' +
+
+      '<thead>' +
+        '<tr>' +
+          '<th class="col-index">#</th>' +
+          '<th class="col-title">Title</th>' +
+          '<th>Authors</th>' +
+          '<th class="col-source">Source</th>' +
+          '<th class="col-year">Year</th>' +
+          '<th class="col-source">DOI / Link</th>' +
+          '<th class="col-score">Relevance</th>' +
+        '</tr>' +
+      '</thead>' +
+
+      '<tbody>' +
+
+        cits.map((c,i)=>{
+          const link = c.url
+            ? `<a class="link" href="${c.url}" target="_blank">Open</a>`
+            : (c.doi ? `<a class="link" href="https://doi.org/${c.doi}" target="_blank">${c.doi}</a>` : '—');
+
+          return `
+            <tr>
+              <td class="col-index">${i+1}</td>
+
+              <td class="col-title" style="color:var(--text)">
+                ${escapeHtml(c.title)}
+              </td>
+
+              <td>
+                ${escapeHtml(c.authors)}
+              </td>
+
+              <td class="col-source">
+                ${escapeHtml(c.journal)}
+              </td>
+
+              <td class="col-year">
+                ${escapeHtml(c.year)}
+              </td>
+
+              <td class="col-source">
+                ${link}
+              </td>
+
+              <td class="col-score">
+                <div class="table-score">
+                  <div class="score-bar">
+                    <div class="score-fill"
+                         style="width:${c.score}%;background:#e8a838"></div>
+                  </div>
+                  <span class="score-num" style="color:#e8a838">
+                    ${c.score}%
+                  </span>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('') +
+
+      '</tbody>' +
+    '</table>' +
+  '</div>';
 
   document.getElementById('kw-results').innerHTML=
     '<div class="views-container">'+
-    '<div class="view-panel"><div class="view-panel-header">&#128203; List View &middot; '+cits.length+' papers found</div><div class="card-list">'+listHtml+'</div></div>'+
-    '<div class="view-panel"><div class="view-panel-header">&#128202; Table View</div>'+tableHtml+'</div>'+
+    '<div class="view-panel"><div class="view-panel-header"><span>📋 List View · '+cits.length+' papers</span></div><div class="card-list">'+listHtml+'</div></div>'+
+    '<div class="view-panel"><div class="view-panel-header"><span>📊 Table View</span></div>'+tableHtml+'</div>'+
     '</div>'+
     '<div class="dashboard">'+
     '<div class="dash-title">Search Analytics</div>'+
@@ -887,7 +2041,7 @@ function renderKeywordResults(papers){
       options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{color:'#6b678a',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},x:{ticks:{color:'#6b678a',font:{size:10}},grid:{display:false}}}}
     });
     const jmap=cits.reduce((acc,c)=>{
-      const k=/IEEE|Trans\./i.test(c.journal)?'IEEE':/Proceedings|Conference|AAAI|CVPR|NeurIPS|ECCV|ICCV|ICML|ICLR/i.test(c.journal)?'Conference':/Journal|Letters|Review/i.test(c.journal)?'Journal':'Other';
+      const k=/arxiv/i.test(c.url||'')?'arXiv':/conference|proceedings|cvpr|neurips|icml|iclr|iccv|eccv/i.test(c.journal)?'Conference':/journal|letters|review/i.test(c.journal)?'Journal':'Other';
       acc[k]=(acc[k]||0)+1; return acc;
     },{});
     new Chart(document.getElementById(pc2),{
@@ -898,143 +2052,268 @@ function renderKeywordResults(papers){
   },150);
 }
 
-// ─── Render: paste & pdf ─────────────────────────────────────────────────────
-function renderResults(citations, containerId){
-  const container=document.getElementById(containerId);
-  if(!citations||!citations.length){
-    container.innerHTML='<div class="empty-state"><span class="icon">&#128237;</span><p>No citations to display.</p></div>';
+/* ---------------- Render: paste & pdf ---------------- */
+function renderResults(citations, containerId) {
+  const container = document.getElementById(containerId);
+  if (!citations || !citations.length) {
+    container.innerHTML = '<div class="empty-state"><span class="icon">📭</span><p>No citations to display.</p></div>';
     return;
   }
-  window['_cits_'+containerId]=citations;
 
-  const valid   =citations.filter(c=>c.status==='Valid').length;
-  const partial =citations.filter(c=>c.status==='Partially Valid').length;
-  const hallucinated =citations.filter(c=>c.status==='Hallucinated').length;
-  const avgScore=Math.round(citations.reduce((a,c)=>a+c.score,0)/citations.length);
-  const uid=Date.now()%100000;
-  const bc='bc_'+uid, pc='pc_'+(uid+1);
-  const ckey=containerId;
+  for (const c of citations) {
+    if (typeof c.score !== "number") {
+      c.score = Math.round(clamp(Number(c.confidence) || 0, 0, 1) * 100);
+    }
+  }
 
-  const listHtml=citations.map((c,i)=>{
-    const errs=c.errors.length
-      ?'<div class="errors-list">'+c.errors.map(e=>'<div class="error-item">'+escapeHtml(e)+'</div>').join('')+'</div>':'';
-    const expl='<div class="explain-box"><div class="explain-title">Confidence Breakdown</div>'+
-      c.exps.map(e=>'<div class="explain-item">'+escapeHtml(e)+'</div>').join('')+'</div>';
-    const fmts='<div class="formats-box"><div class="formats-title">Formatted Citations '+
-      '<button class="copy-btn" onclick="copyOne('+i+',\''+ckey+'\')">Copy All</button></div>'+
-      '<div class="format-item"><span class="format-label">APA</span><span class="format-text">'+c.apa+'</span></div>'+
-      '<div class="format-item"><span class="format-label">MLA</span><span class="format-text">'+c.mla+'</span></div>'+
-      '<div class="format-item"><span class="format-label">IEEE</span><span class="format-text">'+c.ieee+'</span></div></div>';
-    return '<div class="citation-card">'+
-      '<div class="card-top"><span class="card-title">'+escapeHtml(c.title||'Untitled')+'</span>'+getStatusBadge(c.status)+'</div>'+
-      '<div class="card-meta">'+(c.style!=='Unknown'?'<span class="badge badge-style">'+escapeHtml(c.style)+'</span> ':'')+escapeHtml(c.year||'')+'</div>'+
-      '<div class="card-fields">'+
-        '<div><div class="cf-label">Authors</div><div class="cf-val">'+escapeHtml(c.authors||'N/A')+'</div></div>'+
-        '<div><div class="cf-label">Source</div><div class="cf-val">'+escapeHtml(c.journal||'N/A')+'</div></div></div>'+
-      '<div class="score-row">'+
-      '<div class="score-bar"><div class="score-fill" style="width:'+c.score+'%;background:'+getScoreColor(c.score)+'"></div></div>'+
-      '<span class="score-num" style="color:'+getScoreColor(c.score)+'">'+c.score+'%</span>'+
-      '<span style="font-size:0.72rem;color:var(--text3);font-family:\'DM Mono\',monospace">confidence</span></div>'+
-      errs+expl+fmts+'</div>';
-  }).join('');
+  window["_cits_" + containerId] = citations;
 
-  const tableHtml='<div class="table-wrap"><table><thead><tr>'+
-    '<th>#</th><th>Style</th><th>Authors</th><th>Title</th><th>Source</th><th>Year</th><th>Score</th><th>Status</th>'+
-    '</tr></thead><tbody>'+
-    citations.map((c,i)=>'<tr>'+
-      '<td style="font-family:\'DM Mono\',monospace;color:var(--text3)">'+(i+1)+'</td>'+
-      '<td><span class="badge badge-style">'+escapeHtml(c.style)+'</span></td>'+
-        '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(c.authors||'N/A')+'</td>'+
-        '<td style="max-width:160px">'+escapeHtml(c.title||'N/A')+'</td>'+
-        '<td style="max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:0.72rem">'+escapeHtml(c.journal||'N/A')+'</td>'+
-        '<td style="font-family:\'DM Mono\',monospace">'+escapeHtml(c.year||'N/A')+'</td>'+
-      '<td><div style="display:flex;align-items:center;gap:5px"><div class="score-bar"><div class="score-fill" style="width:'+c.score+'%;background:'+getScoreColor(c.score)+'"></div></div>'+
-      '<span style="font-size:0.75rem;color:'+getScoreColor(c.score)+';font-family:\'DM Mono\',monospace">'+c.score+'%</span></div></td>'+
-      '<td>'+getStatusBadge(c.status)+'</td></tr>').join('')+
-    '</tbody></table></div>';
+  const valid = citations.filter(c => c.status === "Valid" || c.status === "Corrected").length;
+  const partial = citations.filter(c => c.status === "Partially Valid").length;
+  const hallucinated = citations.filter(c => c.status === "Hallucinated" || c.status === "Retracted").length;
+  const avgScore = Math.round(citations.reduce((a, c) => a + (c.score || 0), 0) / citations.length);
+  const uid = Date.now() % 100000;
+  const bc = "bc_" + uid, pc = "pc_" + (uid + 1);
+  const ckey = containerId;
 
-  container.innerHTML=
-    '<div class="views-container">'+
-    '<div class="view-panel"><div class="view-panel-header">&#128203; List View &middot; '+citations.length+' citations</div><div class="card-list">'+listHtml+'</div></div>'+
-    '<div class="view-panel"><div class="view-panel-header">&#128202; Table View</div>'+tableHtml+'</div>'+
-    '</div>'+
-    '<div class="dashboard">'+
-    '<div class="dash-title">Analytics Dashboard</div>'+
-    '<div class="dash-stats">'+
-    '<div class="stat-card"><span class="stat-num" style="color:var(--accent2)">'+citations.length+'</span><span class="stat-label">Total</span></div>'+
-    '<div class="stat-card stat-valid"><span class="stat-num">'+valid+'</span><span class="stat-label">Valid</span></div>'+
-    '<div class="stat-card stat-partial"><span class="stat-num">'+partial+'</span><span class="stat-label">Partially Valid</span></div>'+
-    '<div class="stat-card stat-invalid"><span class="stat-num">'+hallucinated+'</span><span class="stat-label">Hallucinated</span></div>'+
-    '<div class="stat-card stat-score"><span class="stat-num">'+avgScore+'%</span><span class="stat-label">Avg Score</span></div>'+
-    '</div>'+
-    '<div class="chart-wrap">'+
-    '<div class="chart-box"><div class="chart-box-title">Status distribution</div><div style="position:relative;height:180px"><canvas id="'+pc+'"></canvas></div></div>'+
-    '<div class="chart-box"><div class="chart-box-title">Confidence per citation</div><div style="position:relative;height:180px"><canvas id="'+bc+'"></canvas></div></div>'+
-    '</div>'+
-    '<div class="export-bar"><label>Export:</label>'+
-    '<button class="btn btn-secondary btn-sm" onclick="exportCSV(window[\'_cits_'+ckey+'\'])">CSV</button>'+
-    '<button class="btn btn-secondary btn-sm" onclick="exportJSON(window[\'_cits_'+ckey+'\'])">JSON</button>'+
-    '<button class="btn btn-secondary btn-sm" onclick="copyBiblio(window[\'_cits_'+ckey+'\'])">Copy Bibliography</button>'+
-    '</div></div>';
+  const listHtml = citations.map((c, i) => {
+      const errs = c.errors?.length
+        ? '<div class="errors-list">' + c.errors.map(e => '<div class="error-item">' + escapeHtml(e) + "</div>").join("") + "</div>" : "";
 
-  setTimeout(()=>{
-    new Chart(document.getElementById(pc),{
-      type:'doughnut',
-      data:{labels:['Valid','Partially Valid','Hallucinated'],datasets:[{data:[valid,partial,hallucinated],backgroundColor:['#3ed9a8','#f0a840','#f06060'],borderWidth:0}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{color:'#a09cb8',font:{size:10},boxWidth:10}}}}
-    });
-    new Chart(document.getElementById(bc),{
-      type:'bar',
-      data:{labels:citations.map((_,i)=>'C'+(i+1)),datasets:[{label:'Score',data:citations.map(c=>c.score),backgroundColor:citations.map(c=>getScoreColor(c.score)+'bb'),borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{color:'#6b678a',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},x:{ticks:{color:'#6b678a',font:{size:10}},grid:{display:false}}}}
-    });
-  },150);
+      const expl = c.exps?.length
+        ? '<div class="explain-box"><div class="explain-title">Explanation</div>' + c.exps.map(e => '<div class="explain-item">' + escapeHtml(e) + "</div>").join("") + "</div>" : "";
+        
+      const fmts =
+        '<div class="formats-box"><div class="formats-title">Formatted Citations <button class="copy-btn" onclick="copyOne(' + i + ",'" + ckey + '\')">Copy All</button></div>' +
+        '<div class="format-item"><span class="format-label">APA</span><span class="format-text">' + c.apa + "</span></div>" +
+        '<div class="format-item"><span class="format-label">MLA</span><span class="format-text">' + c.mla + "</span></div>" +
+        '<div class="format-item"><span class="format-label">IEEE</span><span class="format-text">' + c.ieee + "</span></div></div>";
+
+      const link = c.url ? `<a class="link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(c.url)}</a>` : "N/A";
+      const best = c.bestMatch ? `${escapeHtml(c.bestMatch.provider)} · ${escapeHtml(c.bestMatch.year || "")}` : "N/A";
+
+      const retractionWarning = c.isRetracted
+        ? `<div style="margin-top:0.5rem;padding:0.5rem 0.7rem;background:rgba(240,96,96,0.1);border-radius:6px;border:1px solid rgba(240,96,96,0.3);color:var(--danger);font-size:0.85rem">
+             <strong>⚠ WARNING: This paper has been marked as RETRACTED.</strong>
+             ${c.retractionReason ? `<div style="margin-top:4px">Reason: ${escapeHtml(c.retractionReason)}</div>` : ""}
+             ${c.retractionSource ? `<div style="margin-top:4px"><a href="${escapeHtml(c.retractionSource)}" style="color:var(--danger)" target="_blank">View retraction notice</a></div>` : ""}
+           </div>`
+        : "";
+
+      const details = `
+      <details class="details">
+        <summary>Match details</summary>
+        <div class="kv">
+          <div class="k">Best match</div><div>${best}</div>
+          <div class="k">Link</div><div>${link}</div>
+          <div class="k">Detected style</div><div>${escapeHtml(c.style || "Unknown")}</div>
+          <div class="k">Parsed title</div><div>${escapeHtml(c.title || "")}</div>
+          <div class="k">Parsed source</div><div>${escapeHtml(c.journal || "")}</div>
+          <div class="k">Parsed year</div><div>${escapeHtml(c.year || "")}</div>
+        </div>
+      </details>
+    `;
+
+      const conf = clamp(Number(c.confidence) || 0, 0, 1);
+      const confColor = c.isRetracted ? '#f06060' : getScoreColorPercent(conf);
+      const confPct = Math.round(conf * 100);
+
+      return (
+        '<div class="citation-card">' +
+        '<div class="card-top"><span class="card-title">' + escapeHtml(c.title || "Untitled") + "</span>" + getStatusBadge(c.status, c) + "</div>" +
+        retractionWarning +
+        '<div class="card-meta">' +
+        (c.style && c.style !== "Unknown" ? '<span class="badge badge-style">' + escapeHtml(c.style) + "</span>" : "") +
+        (c.bestMatch?.provider ? '<span class="badge badge-api">' + escapeHtml(c.bestMatch.provider) + "</span>" : "") +
+        '<span class="pill">confidence <span class="progress"><i style="width:' + confPct + "%;background:" + confColor + '"></i></span> <b style="color:' + confColor + '">' + confPct + "%</b></span>" +
+        "</div>" +
+        '<div class="card-fields">' +
+        '<div><div class="cf-label">Authors</div><div class="cf-val">' + escapeHtml(c.authors || "N/A") + "</div></div>" +
+        '<div><div class="cf-label">Source</div><div class="cf-val">' + escapeHtml(c.journal || "N/A") + "</div></div></div>" +
+        '<div class="score-row">' +
+        '<div class="score-bar"><div class="score-fill" style="width:' + c.score + "%;background:" + confColor + '"></div></div>' +
+        '<span class="score-num" style="color:' + confColor + '">' + c.score + '%</span><span style="font-size:0.72rem;color:var(--text3);font-family:\'Poppins\',monospace">confidence</span></div>' +
+        errs + expl + details +
+        '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-correct btn-sm" onclick="correctCitation(' + i + ",'" + containerId + '\')">Correct</button></div>' +
+        '<div id="correct-area-' + containerId + "-" + i + '"></div>' +
+        fmts + "</div>"
+      );
+    })
+    .join("");
+
+  const tableHtml =
+  '<div class="table-wrap"><table class="citation-table"><thead><tr>' +
+  '<th>#</th>' +
+  '<th>Style</th>' +
+  '<th>Title</th>' +
+  '<th>Source</th>' +
+  '<th>Year</th>' +
+  '<th>Best API</th>' +
+  '<th>Score</th>' +
+  '<th>Status</th>' +
+  '</tr></thead><tbody>' +
+  citations.map((c, i) => {
+    const score = typeof c.score === "number"
+      ? c.score
+      : Math.round(clamp(Number(c.confidence) || 0, 0, 1) * 100);
+    const scoreColor = getScoreColor(score);
+    const bestApi = c.bestMatch?.provider || "N/A";
+    return (
+      '<tr>' +
+      '<td class="col-index">' + (i + 1) + '</td>' +      '<td class="col-style">' +
+      (c.style ? '<span class="badge badge-style">' + escapeHtml(c.style) + '</span>' : 'N/A') +
+      '</td>' +
+      '<td class="col-title">' + escapeHtml(c.title || 'N/A') + '</td>' +
+      '<td class="col-source">' + escapeHtml(c.journal || 'N/A') + '</td>' +
+      '<td class="col-year">' + escapeHtml(c.year || 'N/A') + '</td>' +
+      '<td class="col-api">' + escapeHtml(bestApi) + '</td>' +
+      '<td class="col-score">' +
+        '<div class="table-score">' +
+          '<div class="score-bar">' +
+            '<div class="score-fill" style="width:' + score + '%;background:' + scoreColor + '"></div>' +
+          '</div>' +
+          '<span class="score-num" style="color:' + scoreColor + '">' + score + '%</span>' +
+        '</div>' +
+      '</td>' +
+      '<td class="col-status">' + getStatusBadge(c.status, c) + '</td>' +
+      '</tr>'
+    );
+  }).join('') +
+  '</tbody></table></div>';
+
+  container.innerHTML =
+    '<div class="views-container">' +
+    '<div class="view-panel"><div class="view-panel-header"><span>📋 List View · ' + citations.length + ' citations</span></div><div class="card-list">' + listHtml + "</div></div>" +
+    '<div class="view-panel"><div class="view-panel-header"><span>📊 Table View</span></div>' + tableHtml + "</div></div>" +
+    '<div class="dashboard">' +
+    '<div class="dash-title">Analytics Dashboard</div>' +
+    '<div class="dash-stats">' +
+    '<div class="stat-card"><span class="stat-num" style="color:var(--accent2)">' + citations.length + '</span><span class="stat-label">Total</span></div>' +
+    '<div class="stat-card stat-valid"><span class="stat-num">' + valid + '</span><span class="stat-label">Valid</span></div>' +
+    '<div class="stat-card stat-partial"><span class="stat-num">' + partial + '</span><span class="stat-label">Partially Valid</span></div>' +
+    '<div class="stat-card stat-invalid"><span class="stat-num">' + hallucinated + '</span><span class="stat-label">Invalid/Retracted</span></div>' +
+    '<div class="stat-card stat-score"><span class="stat-num">' + avgScore + '%</span><span class="stat-label">Avg Score</span></div>' +
+    "</div>" +
+    '<div class="chart-wrap">' +
+    '<div class="chart-box"><div class="chart-box-title">Status distribution</div><div style="position:relative;height:180px"><canvas id="' + pc + '"></canvas></div></div>' +
+    '<div class="chart-box"><div class="chart-box-title">Confidence per citation</div><div style="position:relative;height:180px"><canvas id="' + bc + '"></canvas></div></div>' +
+    "</div>" +
+    '<div class="export-bar"><label>Export:</label>' +
+    '<button class="btn btn-secondary btn-sm" onclick="exportCSV(window[\'_cits_' + ckey + '\'])">CSV</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="exportJSON(window[\'_cits_' + ckey + '\'])">JSON</button>' +
+    '<button class="btn btn-secondary btn-sm" onclick="copyBiblio(window[\'_cits_' + ckey + '\'])">Copy Bibliography</button>' +
+    "</div></div>";
+
+  setTimeout(() => {
+  if (typeof Chart === "undefined") {
+    console.error("Chart.js is not loaded.");
+    return;
+  }
+
+  const statusCanvas = document.getElementById(pc);
+  const confidenceCanvas = document.getElementById(bc);
+
+  if (!statusCanvas || !confidenceCanvas) {
+    console.error("Chart canvas not found.");
+    return;
+  }
+
+  if (window[pc + "_chart"]) {
+    window[pc + "_chart"].destroy();
+  }
+
+  if (window[bc + "_chart"]) {
+    window[bc + "_chart"].destroy();
+  }
+
+  window[pc + "_chart"] = new Chart(statusCanvas, {
+    type: "pie",
+    data: {
+      labels: ["Valid", "Partially Valid", "Hallucinated/Retracted"],
+      datasets: [{
+        data: [valid, partial, hallucinated],
+        backgroundColor: ["#3ed9a8", "#f0a840", "#f06060"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: "#a09cb8",
+            font: { size: 10 },
+            boxWidth: 10
+          }
+        }
+      }
+    }
+  });
+
+  window[bc + "_chart"] = new Chart(confidenceCanvas, {
+    type: "pie",
+    data: {
+      labels: citations.map((_, i) => "Citation " + (i + 1)),
+      datasets: [{
+        data: citations.map(c => Math.round((c.confidence || c.score / 100 || 0) * 100)),
+        backgroundColor: citations.map(c => {
+          const score = Math.round((c.confidence || c.score / 100 || 0) * 100);
+          return getScoreColor(score);
+        }),
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: "#a09cb8",
+            font: { size: 10 },
+            boxWidth: 10
+          }
+        }
+      }
+    }
+  });
+}, 150);
 }
 
-// ─── Copy / Export ───────────────────────────────────────────────────────────
-function copyOne(idx,ckey){
-  const cits=window['_cits_'+ckey];
-  if(!cits||!cits[idx]) return;
-  _copyFmt(cits[idx]);
-}
-function copyKw(idx){
-  const c=window._kw_cits&&window._kw_cits[idx];
-  if(c) _copyFmt(c);
-}
+/* ---------------- Copy / Export ---------------- */
+function copyOne(idx,ckey){ const cits=window['_cits_'+ckey]; if(cits&&cits[idx]) _copyFmt(cits[idx]); }
+function copyKw(idx){ if(window._kw_cits&&window._kw_cits[idx]) _copyFmt(window._kw_cits[idx]); }
 function _copyFmt(c){
-  const text='APA: '+c.apa.replace(/<[^>]+>/g,'')+'\nMLA: '+c.mla.replace(/<[^>]+>/g,'')+'\nIEEE: '+c.ieee.replace(/<[^>]+>/g,'');
+  const text='APA: '+String(c.apa||'').replace(/<[^>]+>/g,'')+'\nMLA: '+String(c.mla||'').replace(/<[^>]+>/g,'')+'\nIEEE: '+String(c.ieee||'').replace(/<[^>]+>/g,'');
   navigator.clipboard.writeText(text).then(()=>showToast('Citations copied!')).catch(()=>showToast('Copy failed - please copy manually.'));
 }
 function exportCSV(cits){
-  if(!cits){showToast('No data to export.');return;}
-  const h='Authors,Title,Journal,Year,Style,Score,Status,DOI,URL\n';
-  const rows=cits.map(c=>[
-    c.authors,c.title,c.journal,c.year,c.style,c.score,c.status,c.doi||'',c.url||''
-  ].map(v=>'"'+(v||'').toString().replace(/"/g,"''")+'"').join(',')).join('\n');
+  if(!cits) return;
+  const h='Authors,Title,Journal,Year,Style,Score,Status,DOI,URL,BestAPI\n';
+  const rows=cits.map(c=>[c.authors,c.title,c.journal,c.year,c.style,Math.round((c.confidence||0)*100),c.status,c.doi||'',c.url||'',c.bestMatch?.provider||''].map(v=>'"'+(v||'').toString().replace(/"/g,"''")+'"').join(',')).join('\n');
   dl('citations.csv','text/csv',h+rows);
 }
 function exportJSON(cits){
-  if(!cits){showToast('No data to export.');return;}
+  if(!cits) return;
   const data=cits.map(c=>({
-    authors:c.authors,title:c.title,journal:c.journal,year:c.year,style:c.style,
-    confidenceScore:c.score,status:c.status,
-    doi:c.doi||'',url:c.url||'',
-    formattedAPA:c.apa.replace(/<[^>]+>/g,''),
-    formattedMLA:c.mla.replace(/<[^>]+>/g,''),
-    formattedIEEE:c.ieee.replace(/<[^>]+>/g,'')
+    raw:c.raw, parsed:{authors:c.authors,title:c.title,source:c.journal,year:c.year,style:c.style},
+    verification:{ status:c.status, isRetracted: c.isRetracted, confidence:c.confidence, bestMatch:c.bestMatch || null, doi:c.doi||'', url:c.url||'' },
+    formatted:{ APA:String(c.apa||'').replace(/<[^>]+>/g,''), MLA:String(c.mla||'').replace(/<[^>]+>/g,''), IEEE:String(c.ieee||'').replace(/<[^>]+>/g,'') },
+    errors:c.errors||[], explanations:c.exps||[]
   }));
   dl('citations.json','application/json',JSON.stringify(data,null,2));
 }
 function copyBiblio(cits){
-  if(!cits){showToast('No data to export.');return;}
-  const text=cits.map((c,i)=>'['+(i+1)+'] '+c.apa.replace(/<[^>]+>/g,'')).join('\n\n');
+  if(!cits) return;
+  const text=cits.map((c,i)=>'['+(i+1)+'] '+String(c.apa||'').replace(/<[^>]+>/g,'')).join('\n\n');
   navigator.clipboard.writeText(text).then(()=>showToast('Bibliography copied!')).catch(()=>showToast('Copy failed.'));
 }
-function dl(name,mime,data){
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([data],{type:mime}));
-  a.download=name; a.click();
-}
+function dl(name,mime,data){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([data],{type:mime})); a.download=name; a.click(); }
 </script>
 </body>
 </html>
